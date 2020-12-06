@@ -1,0 +1,5 @@
+class bus
+{
+public:
+private:
+};
