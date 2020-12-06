@@ -4,12 +4,14 @@
 cmake_minimum_required (VERSION 3.16)
 
 set(NES_EMU_INCLUDES
+	"inc/nes.hpp"
 	"inc/cpu.hpp"
 	"inc/bus.hpp"
 )
 
 set(NES_EMU_SOURCES
 
+	"src/cpu.cpp"
 	"src/bus.cpp"
 
 	"src/main.cpp"
