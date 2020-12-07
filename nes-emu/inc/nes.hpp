@@ -12,7 +12,7 @@ namespace nes_emu
 class nes
 {
 public:
-	static std::unique_ptr<nes> build()
+	[[nodiscard]] static std::unique_ptr<nes> build()
 	{
 		//populate motherboard
 		auto bus = std::make_unique<nes_emu::bus>();

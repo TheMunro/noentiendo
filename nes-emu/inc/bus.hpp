@@ -17,7 +17,7 @@ public:
 	{
 	}
 	
-	uint8_t read(uint16_t address, bool read_only = false) const;
+	[[nodiscard]] uint8_t read(uint16_t address, bool read_only = false) const;
 	void write(uint16_t address, uint8_t data) const;
 
 private:
