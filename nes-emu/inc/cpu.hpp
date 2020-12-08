@@ -34,6 +34,8 @@ class instruction
 public:
 	opcode opcode;
 	bool complete = false;
+	//uint8_t size;
+	//uint8_t duration;
 
 	uint8_t (cpu::*execute)() = nullptr;
 	uint8_t (cpu::*addressing_mode)() = nullptr;
@@ -60,7 +62,25 @@ public:
 	[[nodiscard]] uint8_t read(uint16_t address, bool read_only = false) const;
 	void write(uint16_t address, uint8_t data) const;
 
+
 	//addressing
+	bool address_mode_implicit();
+	bool address_mode_accumulator();
+	bool address_mode_immediate();
+	
+	bool address_mode_zero_page();
+	bool address_mode_zero_page_x();
+	bool address_mode_zero_page_y();
+	
+	bool address_mode_relative();
+	bool address_mode_absolute();
+	bool address_mode_absolute_x();
+	bool address_mode_absolute_y();
+	
+	bool address_mode_indirect();
+	bool address_mode_indexed_indirect();
+	bool address_mode_indirect_indexed();
+
 
 	//opcodes
 	
@@ -70,23 +90,20 @@ private:
 	const bus& bus;
 	const std::array<instruction, 256> instructions;
 
-	//data
-	uint8_t fetched = 0x00;
-
-	//addressing
-	uint16_t address_absolute = 0x0000;
-	uint16_t address_relative = 0x0000;
-
-	//opcodes
-	uint8_t opcode = 0x00;
-	uint8_t cycles_remaining = 0;
-
 	//registers
-	uint8_t register_accumulator = 0x00;
+	uint8_t register_accumulator = 0x00; 
 	uint8_t register_x = 0x00;
 	uint8_t register_y = 0x00;
 	uint8_t register_stack_pointer = 0x00;
 	uint16_t register_program_counter = 0x0000;
 	processor_status_register register_status = processor_status_register::none;
+
+	//internals
+	uint8_t fetched = 0x00;                //working data for current instruction, if required
+	uint16_t address_absolute = 0x0000;    //used for direct addressing
+	uint8_t address_relative = 0x00;       //used for branching operations [-127, 128]
+	uint8_t opcode = 0x00;                 //current instruction
+	uint8_t cycles_remaining = 0;          //remaining cycles for current instruction
+	uint32_t clock_count = 0;              //clock count accumulator
 };
 }	 // namespace nes
