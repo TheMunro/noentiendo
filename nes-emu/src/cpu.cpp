@@ -150,7 +150,7 @@ bool nes_emu::cpu::address_mode_absolute()
 	const std::uint16_t hi_byte = read(register_program_counter);
 	register_program_counter++;
 
-	address_absolute = (hi_byte << 0xFF) + lo_byte;
+	address_absolute = static_cast<std::uint16_t>(hi_byte << 8) + lo_byte;
 	
 	return false;
 }
@@ -199,7 +199,7 @@ bool nes_emu::cpu::address_mode_indirect()
 	const std::uint16_t hi_byte = read(register_program_counter);
 	register_program_counter++;
 
-	address_absolute = (hi_byte << 0xFF) + lo_byte;
+	address_absolute = static_cast<std::uint16_t>(hi_byte << 8) + lo_byte;
 	
 	return false;
 }
@@ -225,7 +225,7 @@ bool nes_emu::cpu::address_mode_indexed_indirect()
 	const std::uint16_t hi_byte = read(ptr) << 8;
 	const std::uint16_t lo_byte = read(ptr + 1);
 
-	address_absolute = (hi_byte << 0xFF) + lo_byte;
+	address_absolute = static_cast<std::uint16_t>(hi_byte << 8) + lo_byte;
 	
 	return false;
 }
@@ -252,7 +252,7 @@ bool nes_emu::cpu::address_mode_indirect_indexed()
 	const std::uint16_t hi_byte = read(ptr) << 8;
 	const std::uint16_t lo_byte = read(ptr + 1);
 
-	address_absolute = (hi_byte << 0xFF) + lo_byte;
+	address_absolute = static_cast<std::uint16_t>(hi_byte << 8) + lo_byte;
 	
 	address_absolute += register_y;
 
@@ -260,5 +260,285 @@ bool nes_emu::cpu::address_mode_indirect_indexed()
 	if ((address_absolute & 0xFF00) != hi_byte)
 		return true;
 	
+	return false;
+}
+
+bool nes_emu::cpu::instruction_adc()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_and()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_asl()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_bcc()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_bcs()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_beq()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_bit()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_bmi()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_bne()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_bpl()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_brk()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_bvc()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_bvs()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_clc()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_cld()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_cli()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_clv()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_cmp()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_cpx()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_cpy()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_dec()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_dex()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_dey()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_eor()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_inc()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_inx()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_iny()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_jmp()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_jsr()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_lda()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_ldx()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_ldy()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_lsr()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_nop()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_ora()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_pha()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_php()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_pla()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_plp()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_rol()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_ror()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_rti()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_rts()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_sbc()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_sec()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_sed()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_sei()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_sta()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_stx()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_sty()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_tax()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_tay()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_tsx()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_txa()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_txs()
+{
+	return false;
+}
+
+bool nes_emu::cpu::instruction_tya()
+{
 	return false;
 }
