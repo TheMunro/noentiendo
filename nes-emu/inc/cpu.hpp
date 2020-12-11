@@ -28,29 +28,59 @@ template<typename enum_class_type> class bitfield
 	using underlying_type = std::underlying_type_t<enum_class_type>;
 	
 public:
-	bitfield()
+	constexpr bitfield() noexcept
 		: flags{}
 	{
 	}
 	
-	bitfield(const enum_class_type flags)
-		: flags{static_cast<underlying_type>(flags)}
+	constexpr bitfield(const underlying_type initial_flags) noexcept
+		: flags{initial_flags}
 	{	
 	}
 
-	void set_flag(const enum_class_type flag)
+	template <class U>
+	constexpr bitfield(U initial_flags) noexcept
+		: flags(static_cast<underlying_type>(initial_flags))
 	{
-		flags |= static_cast<underlying_type>(flag);
 	}
 
-	void clear_flag(const enum_class_type flag)
+	//can I constexpr all the things?
+    constexpr bitfield operator~() const noexcept
 	{
-		flags &= ~static_cast<underlying_type>(flag);
+		return bitfield {~flags};
 	}
 
-	void toggle_flag(const enum_class_type flag)
+	constexpr bitfield operator&(const bitfield& r) const noexcept
 	{
-		flags ^= static_cast<underlying_type>(flag);
+		return bitfield {flags & r.flags};
+	}
+
+	constexpr bitfield operator|(const bitfield& r) const noexcept
+	{
+		return bitfield {flags | r.flags};
+	}
+
+	constexpr bitfield operator^(const bitfield& r) const noexcept
+	{
+		return bitfield {flags ^ r.flags};
+	}
+
+	constexpr bitfield& operator|=(const bitfield& r) noexcept
+	{
+		flags |= r.flags;
+		return *this;
+	}
+
+	constexpr bitfield& operator&=(const bitfield& r) noexcept
+	{
+		flags &= r.flags;
+		return *this;
+	}
+
+	constexpr bitfield& operator^=(const bitfield& r) noexcept
+	{
+		flags ^= r.flags;
+		return *this;
 	}
 
 	enum_class_type value() const
@@ -62,8 +92,26 @@ private:
 	underlying_type flags;
 };
 
+//consider overloading |=, &= and ^= instead
+//void set_flag(const enum_class_type flag)
+//{
+//	flags |= static_cast<underlying_type>(flag);
+//}
+//
+//void clear_flag(const enum_class_type flag)
+//{
+//	flags &= ~static_cast<underlying_type>(flag);
+//}
+//
+//void toggle_flag(const enum_class_type flag)
+//{
+//	flags ^= static_cast<underlying_type>(flag);
+//}
+
+
 enum class opcode
 {
+	//please don't hurt me for doing this... I'm not like this normally
 	None = 0,
 	ADC, AND, ASL, BCC,
 	BCS, BEQ, BIT, BMI,
@@ -80,6 +128,73 @@ enum class opcode
 	STX, STY, TAX, TAY,
 	TSX, TXA, TXS, TYA,
 };
+
+
+
+enum class InstructionType
+{
+	None = 0,
+	ADC,	//Add Memory to Accumulator with Carry
+	AND,	//AND Memory with Accumulator
+	ASL,	//Shift Left One Bit (Memory or Accumulator)
+	BCC,	//Branch on Carry Clear
+	BCS,	//Branch on Carry Set
+	BEQ,	//Branch on Result Zero
+	BIT,	//Test Bits in Memory with Accumulator
+	BMI,	//Branch on Result Minus
+	BNE,	//Branch on Result not Zero
+	BPL,	//Branch on Result Plus
+	BRK,	//Force Break
+	BVC,	//Branch on Overflow Clear
+	BVS,	//Branch on Overflow Set
+	CLC,	//Clear Carry Flag
+	CLD,	//Clear Decimal Mode
+	CLI,	//CLear Interrupt Disable Bit
+	CLV,	//Clear Overflow Flag
+	CMP,	//Compare Memory and Accumulator
+	CPX,	//Compare Memory and Index X
+	CPY,	//Comapre Memory and Index Y
+	DEC,	//Decrement Memory by One
+	DEX,	//Decrement Index X by One
+	DEY,	//Decrement Index Y by One
+	DCP,	//DECs the contents of a memory location and then CMPs the result with the Accumulator
+	EOR,	//XOR Memory with Accumulator
+	INC,	//Increment Memory by One
+	INX,	//Increment Index X by One
+	INY,	//Increment Index Y by One
+	JMP,	//Jump to New Location
+	JSR,	//Jump to New Location Saving Return Address
+	LDA,	//Load Accumulator with Memory
+	LDX,	//Load Index X with Memory
+	LAX,	//Load Accumulator And X with Memory
+	LDY,	//Load Index Y with Memory
+	LSR,	//Shift One Bit Right (Memory or Accumulator)
+	NOP,	//No Operation
+	ORA,	//OR Memory with Accumulator
+	PHA,	//Push Accumulator on Stack
+	PHP,	//Push Processor Status on Stack
+	PLA,	//Pull Accumulator from Stack
+	PLP,	//Pull Processor Status from Stack
+	ROL,	//Rotate One Bit Left (Memory or Accumulator)
+	ROR,	//Rotate One Bit Right (Memory or Accumulator)
+	RTI,	//Return from Interrupt
+	RTS,	//Return from Subroutine
+	SBC,	//Subtract Memory from Accumulator with Borrow
+	SEC,	//Set Carry Flag
+	SED,	//Set Decimal Mode
+	SEI,	//Set Interrupt Disable Status
+	STA,	//Store Accumulator in Memory
+	STX,	//Store Index X in Memory
+	STY,	//Store Index Y in Memory
+	SAX,	//Store X & A in Memory
+	TAX,	//Transfer Accumulator to Index X
+	TAY,	//Transfer Accumulator to Index Y
+	TSX,	//Transfer Stack Pointer to Index X
+	TXA,	//Transfer Index X to Accumulator
+	TXS,	//Transfer Index X to Stack Register
+	TYA,	//Transfer Index Y to Accumulator
+};
+
 
 class cpu;
 class instruction
@@ -135,6 +250,7 @@ public:
 	[[nodiscard]] bool address_mode_indirect_indexed();
 	
 	//opcodes
+	//I can only apologise here...
 	[[nodiscard]] bool instruction_adc(); [[nodiscard]] bool instruction_and(); [[nodiscard]] bool instruction_asl(); [[nodiscard]] bool instruction_bcc();
 	[[nodiscard]] bool instruction_bcs(); [[nodiscard]] bool instruction_beq(); [[nodiscard]] bool instruction_bit(); [[nodiscard]] bool instruction_bmi();
 	[[nodiscard]] bool instruction_bne(); [[nodiscard]] bool instruction_bpl(); [[nodiscard]] bool instruction_brk(); [[nodiscard]] bool instruction_bvc();
@@ -151,16 +267,21 @@ public:
 	[[nodiscard]] bool instruction_tsx(); [[nodiscard]] bool instruction_txa(); [[nodiscard]] bool instruction_txs(); [[nodiscard]] bool instruction_tya();
 
 	//flags
-	void set_flag(processor_status_register flag, bool value)
+	[[nodiscard]] bool get_flag(const processor_status_register flag) const
 	{
-		//well... I don't like this...
-		//using T = std::underlying_type_t<processor_status_register>;
-		//register_status = static_cast<processor_status_register>(static_cast<T>(register_status) | static_cast<T>(flag));
-
+		return (register_status & flag).value() == flag;
+	}
+	
+	void set_flag(const processor_status_register flag, const std::uint8_t value)
+	{
 		if (value)
-			register_status.set_flag(flag);
-		else
-			register_status.clear_flag(flag);
+			register_status &= flag;
+	}
+
+	void clear_flag(const processor_status_register flag, const std::uint8_t value)
+	{
+		if (value)
+			register_status |= flag;
 	}
 
 private:
