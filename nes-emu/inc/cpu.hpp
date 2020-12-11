@@ -3,6 +3,7 @@
 //STDLIB
 #include <cstdint>
 #include <vector>
+#include <type_traits>
 
 //INTERNAL
 #include "bus.hpp"
@@ -22,10 +23,62 @@ enum class processor_status_register : std::uint8_t
 	negative        = 1 << 7  //N
 };
 
+template<typename enum_class_type> class bitfield
+{
+	using underlying_type = std::underlying_type_t<enum_class_type>;
+	
+public:
+	bitfield()
+		: flags{}
+	{
+	}
+	
+	bitfield(const enum_class_type flags)
+		: flags{static_cast<underlying_type>(flags)}
+	{	
+	}
+
+	void set_flag(const enum_class_type flag)
+	{
+		flags |= static_cast<underlying_type>(flag);
+	}
+
+	void clear_flag(const enum_class_type flag)
+	{
+		flags &= ~static_cast<underlying_type>(flag);
+	}
+
+	void toggle_flag(const enum_class_type flag)
+	{
+		flags ^= static_cast<underlying_type>(flag);
+	}
+
+	enum_class_type value() const
+	{
+		return static_cast<enum_class_type>(flags);
+	}
+
+private:
+	underlying_type flags;
+};
+
 enum class opcode
 {
-	BRK
-	//...and all the rest
+	None = 0,
+	ADC, AND, ASL, BCC,
+	BCS, BEQ, BIT, BMI,
+	BNE, BPL, BRK, BVC,
+	BVS, CLC, CLD, CLI,
+	CLV, CMP, CPX, CPY,
+	DEC, DEX, DEY, EOR,
+	INC, INX, INY, JMP,
+	JSR, LDA, LDX, LDY,
+	LSR, NOP, ORA, PHA,
+	PHP, PLA, PLP, ROL,
+	ROR, RTI, RTS, SBC,
+	SEC, SED, SEI, STA,
+	STX, STY, TAX, TAY,
+	TSX, TXA, TXS, TYA,
 };
 
 class cpu;
@@ -34,6 +87,7 @@ class instruction
 public:
 	opcode opcode;
 	bool complete = false;
+	uint8_t bytes = 0;
 	uint8_t cycles = 0;
 
 	bool (cpu::*execute)() = nullptr;
@@ -57,87 +111,58 @@ public:
 	void non_maskable_interrupt();
 
 	//data
-	[[nodiscard]] std::uint8_t fetch();
+	void fetch();
 	[[nodiscard]] std::uint8_t read(std::uint16_t address, bool read_only = false) const;
 	void write(std::uint16_t address, std::uint8_t data) const;
 
 	//addressing
 	//http://www.emulator101.com/6502-addressing-modes.html
-	bool address_mode_implicit();
-	bool address_mode_accumulator();
-	bool address_mode_immediate();
-	
-	bool address_mode_zero_page();
-	bool address_mode_zero_page_x();
-	bool address_mode_zero_page_y();
-	
-	bool address_mode_relative();
-	bool address_mode_absolute();
-	bool address_mode_absolute_x();
-	bool address_mode_absolute_y();
-	
-	bool address_mode_indirect();
-	bool address_mode_indexed_indirect();
-	bool address_mode_indirect_indexed();
+	[[nodiscard]] bool address_mode_implicit();
+	[[nodiscard]] bool address_mode_accumulator();
+	[[nodiscard]] bool address_mode_immediate();
+
+	[[nodiscard]] bool address_mode_zero_page();
+	[[nodiscard]] bool address_mode_zero_page_x();
+	[[nodiscard]] bool address_mode_zero_page_y();
+
+	[[nodiscard]] bool address_mode_relative();
+	[[nodiscard]] bool address_mode_absolute();
+	[[nodiscard]] bool address_mode_absolute_x();
+	[[nodiscard]] bool address_mode_absolute_y();
+
+	[[nodiscard]] bool address_mode_indirect();
+	[[nodiscard]] bool address_mode_indexed_indirect();
+	[[nodiscard]] bool address_mode_indirect_indexed();
 	
 	//opcodes
-	bool instruction_adc();
-	bool instruction_and();
-	bool instruction_asl();
-	bool instruction_bcc();
-	bool instruction_bcs();
-	bool instruction_beq();
-	bool instruction_bit();
-	bool instruction_bmi();
-	bool instruction_bne();
-	bool instruction_bpl();
-	bool instruction_brk();
-	bool instruction_bvc();
-	bool instruction_bvs();
-	bool instruction_clc();
-	bool instruction_cld();
-	bool instruction_cli();
-	bool instruction_clv();
-	bool instruction_cmp();
-	bool instruction_cpx();
-	bool instruction_cpy();
-	bool instruction_dec();
-	bool instruction_dex();
-	bool instruction_dey();
-	bool instruction_eor();
-	bool instruction_inc();
-	bool instruction_inx();
-	bool instruction_iny();
-	bool instruction_jmp();
-	bool instruction_jsr();
-	bool instruction_lda();
-	bool instruction_ldx();
-	bool instruction_ldy();
-	bool instruction_lsr();
-	bool instruction_nop();
-	bool instruction_ora();
-	bool instruction_pha();
-	bool instruction_php();
-	bool instruction_pla();
-	bool instruction_plp();
-	bool instruction_rol();
-	bool instruction_ror();
-	bool instruction_rti();
-	bool instruction_rts();
-	bool instruction_sbc();
-	bool instruction_sec();
-	bool instruction_sed();
-	bool instruction_sei();
-	bool instruction_sta();
-	bool instruction_stx();
-	bool instruction_sty();
-	bool instruction_tax();
-	bool instruction_tay();
-	bool instruction_tsx();
-	bool instruction_txa();
-	bool instruction_txs();
-	bool instruction_tya();
-	
+	[[nodiscard]] bool instruction_adc(); [[nodiscard]] bool instruction_and(); [[nodiscard]] bool instruction_asl(); [[nodiscard]] bool instruction_bcc();
+	[[nodiscard]] bool instruction_bcs(); [[nodiscard]] bool instruction_beq(); [[nodiscard]] bool instruction_bit(); [[nodiscard]] bool instruction_bmi();
+	[[nodiscard]] bool instruction_bne(); [[nodiscard]] bool instruction_bpl(); [[nodiscard]] bool instruction_brk(); [[nodiscard]] bool instruction_bvc();
+	[[nodiscard]] bool instruction_bvs(); [[nodiscard]] bool instruction_clc(); [[nodiscard]] bool instruction_cld(); [[nodiscard]] bool instruction_cli();
+	[[nodiscard]] bool instruction_clv(); [[nodiscard]] bool instruction_cmp(); [[nodiscard]] bool instruction_cpx(); [[nodiscard]] bool instruction_cpy();
+	[[nodiscard]] bool instruction_dec(); [[nodiscard]] bool instruction_dex(); [[nodiscard]] bool instruction_dey(); [[nodiscard]] bool instruction_eor();
+	[[nodiscard]] bool instruction_inc(); [[nodiscard]] bool instruction_inx(); [[nodiscard]] bool instruction_iny(); [[nodiscard]] bool instruction_jmp();
+	[[nodiscard]] bool instruction_jsr(); [[nodiscard]] bool instruction_lda(); [[nodiscard]] bool instruction_ldx(); [[nodiscard]] bool instruction_ldy();
+	[[nodiscard]] bool instruction_lsr(); [[nodiscard]] bool instruction_nop(); [[nodiscard]] bool instruction_ora(); [[nodiscard]] bool instruction_pha();
+	[[nodiscard]] bool instruction_php(); [[nodiscard]] bool instruction_pla(); [[nodiscard]] bool instruction_plp(); [[nodiscard]] bool instruction_rol();
+	[[nodiscard]] bool instruction_ror(); [[nodiscard]] bool instruction_rti(); [[nodiscard]] bool instruction_rts(); [[nodiscard]] bool instruction_sbc();
+	[[nodiscard]] bool instruction_sec(); [[nodiscard]] bool instruction_sed(); [[nodiscard]] bool instruction_sei(); [[nodiscard]] bool instruction_sta();
+	[[nodiscard]] bool instruction_stx(); [[nodiscard]] bool instruction_sty(); [[nodiscard]] bool instruction_tax(); [[nodiscard]] bool instruction_tay();
+	[[nodiscard]] bool instruction_tsx(); [[nodiscard]] bool instruction_txa(); [[nodiscard]] bool instruction_txs(); [[nodiscard]] bool instruction_tya();
+
+	//flags
+	void set_flag(processor_status_register flag, bool value)
+	{
+		//well... I don't like this...
+		//using T = std::underlying_type_t<processor_status_register>;
+		//register_status = static_cast<processor_status_register>(static_cast<T>(register_status) | static_cast<T>(flag));
+
+		if (value)
+			register_status.set_flag(flag);
+		else
+			register_status.clear_flag(flag);
+	}
+
 private:
 	[[nodiscard]] static constexpr std::array<instruction, 256> build_instructions();
 	
@@ -150,7 +175,7 @@ private:
 	std::uint8_t register_y = 0x00;
 	std::uint8_t register_stack_pointer = 0x00;
 	std::uint16_t register_program_counter = 0x0000;
-	processor_status_register register_status = processor_status_register::none;
+	bitfield<processor_status_register> register_status = processor_status_register::none;
 
 	//internals
 	std::uint8_t fetched = 0x00;                //working data for current instruction, if required

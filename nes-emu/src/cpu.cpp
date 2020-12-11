@@ -21,6 +21,7 @@ void nes_emu::cpu::clock()
 		const auto& instruction = instructions[opcode];
 		cycles_remaining = instruction.cycles;
 
+		//can't use std::invoke unless I have the method name here... templates perhaps?
 		const auto additional_cycle_addressing_mode = (this->*instruction.addressing_mode)();
 		const auto additional_cycle_execute = (this->*instruction.execute)();
 
@@ -31,11 +32,38 @@ void nes_emu::cpu::clock()
 	cycles_remaining--;
 }
 
+void nes_emu::cpu::reset()
+{
+}
+
+void nes_emu::cpu::interrupt()
+{	
+}
+
+void nes_emu::cpu::non_maskable_interrupt()
+{
+}
+
+void nes_emu::cpu::fetch()
+{
+	//oh no, this is horrible!
+	if (!(instructions[opcode].addressing_mode == &nes_emu::cpu::address_mode_implicit))
+		fetched = read(register_accumulator);
+}
+
 constexpr std::array<nes_emu::instruction, 256> nes_emu::cpu::build_instructions()
 {
 	std::array<instruction, 256> instructions{};
 
-	instructions[0x00] = instruction{opcode::BRK, false, 4, &cpu::instruction_adc, &cpu::address_mode_absolute_x};
+	//AND
+	instructions[0x61] = instruction{opcode::AND, false, 2, 6, &cpu::instruction_and, &cpu::address_mode_indexed_indirect};
+	instructions[0x65] = instruction{opcode::AND, false, 2, 3, &cpu::instruction_and, &cpu::address_mode_zero_page};
+	instructions[0x69] = instruction{opcode::AND, false, 2, 2, &cpu::instruction_and, &cpu::address_mode_immediate};
+	instructions[0x6D] = instruction{opcode::AND, false, 3, 4, &cpu::instruction_and, &cpu::address_mode_absolute};
+	instructions[0x71] = instruction{opcode::AND, false, 2, 5, &cpu::instruction_and, &cpu::address_mode_indirect_indexed};
+	instructions[0x75] = instruction{opcode::AND, false, 2, 4, &cpu::instruction_and, &cpu::address_mode_zero_page_x};
+	instructions[0x79] = instruction{opcode::AND, false, 3, 4, &cpu::instruction_and, &cpu::address_mode_absolute_y};
+	instructions[0x7D] = instruction{opcode::AND, false, 3, 4, &cpu::instruction_and, &cpu::address_mode_absolute_x};
 	
 	return instructions;
 }
@@ -265,12 +293,19 @@ bool nes_emu::cpu::address_mode_indirect_indexed()
 
 bool nes_emu::cpu::instruction_adc()
 {
+	//https://www.youtube.com/watch?v=yf_YWiqqv34
 	return false;
 }
 
 bool nes_emu::cpu::instruction_and()
 {
-	return false;
+	fetch();
+	
+	register_accumulator &= fetched;
+	set_flag(processor_status_register::zero, register_accumulator == 0x00);
+	set_flag(processor_status_register::negative, register_accumulator & 0x80);
+	
+	return true;
 }
 
 bool nes_emu::cpu::instruction_asl()
