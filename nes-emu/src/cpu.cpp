@@ -16,7 +16,7 @@ void nes_emu::cpu::clock()
 	if (cycles_remaining == 0)
 	{
 		opcode = read(register_program_counter);
-		register_program_counter++;
+		++register_program_counter;
 
 		const auto& instruction = instructions[opcode];
 		cycles_remaining = instruction.cycles;
@@ -28,8 +28,8 @@ void nes_emu::cpu::clock()
 		cycles_remaining += (additional_cycle_addressing_mode & additional_cycle_execute);
 	}
 
-	clock_count++;
-	cycles_remaining--;
+	++clock_count;
+	--cycles_remaining;
 }
 
 void nes_emu::cpu::reset()
@@ -64,6 +64,14 @@ constexpr std::array<nes_emu::instruction, 256> nes_emu::cpu::build_instructions
 	instructions[0x75] = instruction{opcode::AND, false, 2, 4, &cpu::instruction_and, &cpu::address_mode_zero_page_x};
 	instructions[0x79] = instruction{opcode::AND, false, 3, 4, &cpu::instruction_and, &cpu::address_mode_absolute_y};
 	instructions[0x7D] = instruction{opcode::AND, false, 3, 4, &cpu::instruction_and, &cpu::address_mode_absolute_x};
+
+	//ASL
+	instructions[0x0A] = instruction{opcode::ASL, false, 1, 2, &cpu::instruction_asl, &cpu::address_mode_accumulator};
+	instructions[0x06] = instruction{opcode::ASL, false, 2, 5, &cpu::instruction_asl, &cpu::address_mode_zero_page};
+	instructions[0x16] = instruction{opcode::ASL, false, 2, 6, &cpu::instruction_asl, &cpu::address_mode_zero_page_x};
+	instructions[0x0E] = instruction{opcode::ASL, false, 3, 6, &cpu::instruction_asl, &cpu::address_mode_absolute};
+	instructions[0x1E] = instruction{opcode::ASL, false, 3, 7, &cpu::instruction_asl, &cpu::address_mode_absolute_x};
+
 	
 	return instructions;
 }
@@ -100,7 +108,7 @@ bool nes_emu::cpu::address_mode_immediate()
 	address_absolute = register_program_counter;
 	
 	//program counter increment to prepare next instruction
-	register_program_counter++;
+	++register_program_counter;
 	return false;
 }
 
@@ -116,7 +124,7 @@ bool nes_emu::cpu::address_mode_zero_page()
 	address_absolute = low_byte;
 	
 	//program counter increment to prepare next instruction
-	register_program_counter++;
+	++register_program_counter;
 	return false;
 }
 
@@ -131,7 +139,7 @@ bool nes_emu::cpu::address_mode_zero_page_x()
 	address_absolute = (low_byte + register_x) & 0x00FF;
 
 	//program counter increment to prepare next instruction
-	register_program_counter++;
+	++register_program_counter;
 	return false;
 }
 
@@ -146,7 +154,7 @@ bool nes_emu::cpu::address_mode_zero_page_y()
 	address_absolute = (low_byte + register_y) & 0x00FF;
 
 	//program counter increment to prepare next instruction
-	register_program_counter++;
+	++register_program_counter;
 	return false;
 }
 
@@ -157,7 +165,7 @@ bool nes_emu::cpu::address_mode_relative()
 	//The offset is a signed byte, so it can jump a maximum of 127 bytes forward, or 128 bytes backward.
 
 	address_relative = read(register_program_counter);
-	register_program_counter++;
+	++register_program_counter;
 	
 	//TODO: there is a weird bit in https://github.com/OneLoneCoder/olcNES/blob/master/Part%232%20-%20CPU/olc6502.cpp
 	//TODO: for this that it setting some upper byte that is then only being used to check for overflow,
@@ -173,10 +181,10 @@ bool nes_emu::cpu::address_mode_absolute()
 	//All instructions that use absolute addressing are 3 bytes.
 	
 	const std::uint16_t lo_byte = read(register_program_counter);
-	register_program_counter++;
+	++register_program_counter;
 
 	const std::uint16_t hi_byte = read(register_program_counter);
-	register_program_counter++;
+	++register_program_counter;
 
 	address_absolute = static_cast<std::uint16_t>(hi_byte << 8) + lo_byte;
 	
@@ -222,10 +230,10 @@ bool nes_emu::cpu::address_mode_indirect()
 	//The set the PC to the address stored at that address. So maybe this would be clearer.
 
 	const std::uint16_t lo_byte = read(register_program_counter);
-	register_program_counter++;
+	++register_program_counter;
 
 	const std::uint16_t hi_byte = read(register_program_counter);
-	register_program_counter++;
+	++register_program_counter;
 
 	address_absolute = static_cast<std::uint16_t>(hi_byte << 8) + lo_byte;
 	
@@ -246,7 +254,7 @@ bool nes_emu::cpu::address_mode_indexed_indirect()
 	//the example.Obviously the fetched address has to be stored in the zero page.
 
 	auto ptr = read(register_program_counter);
-	register_program_counter++;
+	++register_program_counter;
 
 	ptr += register_x;
 
@@ -275,7 +283,7 @@ bool nes_emu::cpu::address_mode_indirect_indexed()
 	//is not wrapped - it can be anywhere in the 16-bit address space.
 
 	const auto ptr = read(register_program_counter);
-	register_program_counter++;
+	++register_program_counter;
 
 	const std::uint16_t hi_byte = read(ptr) << 8;
 	const std::uint16_t lo_byte = read(ptr + 1);
@@ -302,6 +310,7 @@ bool nes_emu::cpu::instruction_and()
 	fetch();
 	
 	register_accumulator &= fetched;
+	
 	set_flag(processor_status_register::zero, register_accumulator == 0x00);
 	set_flag(processor_status_register::negative, register_accumulator & 0x80);
 	
@@ -310,41 +319,128 @@ bool nes_emu::cpu::instruction_and()
 
 bool nes_emu::cpu::instruction_asl()
 {
+	fetch();
+
+	const std::uint16_t result = static_cast<std::uint16_t>(fetched) << 1;
+	
+	set_flag(processor_status_register::carry, (result & 0xFF00) != 0x00);
+	set_flag(processor_status_register::zero, (result & 0x00FF) == 0x00);
+	set_flag(processor_status_register::negative, result & 0x80);
+
+	if ((instructions[opcode].addressing_mode == &nes_emu::cpu::address_mode_implicit))
+		register_accumulator = result & 0x00FF;
+	else
+		write(address_absolute, result & 0x00FF);
+	
 	return false;
 }
 
 bool nes_emu::cpu::instruction_bcc()
 {
+	if (!get_flag(processor_status_register::carry))
+	{
+		++cycles_remaining;
+		address_absolute = register_program_counter + address_relative;
+
+		if ((address_absolute & 0xFF00) != (register_program_counter & 0xFF00))
+			++cycles_remaining;
+
+		register_program_counter = address_absolute;
+	}
+	
 	return false;
 }
 
 bool nes_emu::cpu::instruction_bcs()
 {
+	if (get_flag(processor_status_register::carry))
+	{
+		++cycles_remaining;
+		address_absolute = register_program_counter + address_relative;
+
+		if ((address_absolute & 0xFF00) != (register_program_counter & 0xFF00))
+			++cycles_remaining;
+
+		register_program_counter = address_absolute;
+	}
+
 	return false;
 }
 
 bool nes_emu::cpu::instruction_beq()
 {
+	if (get_flag(processor_status_register::zero))
+	{
+		++cycles_remaining;
+		address_absolute = register_program_counter + address_relative;
+
+		if ((address_absolute & 0xFF00) != (register_program_counter & 0xFF00))
+			++cycles_remaining;
+
+		register_program_counter = address_absolute;
+	}
+
 	return false;
 }
 
 bool nes_emu::cpu::instruction_bit()
 {
+	fetch();
+
+	const std::uint16_t result = register_accumulator & fetched;
+
+	set_flag(processor_status_register::zero, (result & 0x00FF) == 0x00);
+	set_flag(processor_status_register::overflow, fetched & (1 << 6));
+	set_flag(processor_status_register::negative, fetched & (1 << 7));
+	
 	return false;
 }
 
 bool nes_emu::cpu::instruction_bmi()
 {
+	if (get_flag(processor_status_register::negative))
+	{
+		++cycles_remaining;
+		address_absolute = register_program_counter + address_relative;
+
+		if ((address_absolute & 0xFF00) != (register_program_counter & 0xFF00))
+			++cycles_remaining;
+
+		register_program_counter = address_absolute;
+	}
+
 	return false;
 }
 
 bool nes_emu::cpu::instruction_bne()
 {
+	if (!get_flag(processor_status_register::zero))
+	{
+		++cycles_remaining;
+		address_absolute = register_program_counter + address_relative;
+
+		if ((address_absolute & 0xFF00) != (register_program_counter & 0xFF00))
+			++cycles_remaining;
+
+		register_program_counter = address_absolute;
+	}
+
 	return false;
 }
 
 bool nes_emu::cpu::instruction_bpl()
 {
+	if (!get_flag(processor_status_register::negative))
+	{
+		++cycles_remaining;
+		address_absolute = register_program_counter + address_relative;
+
+		if ((address_absolute & 0xFF00) != (register_program_counter & 0xFF00))
+			++cycles_remaining;
+
+		register_program_counter = address_absolute;
+	}
+
 	return false;
 }
 

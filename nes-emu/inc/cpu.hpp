@@ -23,7 +23,8 @@ enum class processor_status_register : std::uint8_t
 	negative        = 1 << 7  //N
 };
 
-template<typename enum_class_type> class bitfield
+template<typename enum_class_type>
+class bitfield
 {
 	using underlying_type = std::underlying_type_t<enum_class_type>;
 	
@@ -33,11 +34,6 @@ public:
 	{
 	}
 	
-	constexpr bitfield(const underlying_type initial_flags) noexcept
-		: flags{initial_flags}
-	{	
-	}
-
 	template <class U>
 	constexpr bitfield(U initial_flags) noexcept
 		: flags(static_cast<underlying_type>(initial_flags))
@@ -45,6 +41,7 @@ public:
 	}
 
 	//can I constexpr all the things?
+	//https://en.cppreference.com/w/cpp/named_req/BitmaskType
     constexpr bitfield operator~() const noexcept
 	{
 		return bitfield {~flags};
@@ -83,7 +80,8 @@ public:
 		return *this;
 	}
 
-	enum_class_type value() const
+	//too lazy to add equality operators for now
+	[[nodiscard]] constexpr enum_class_type value() const
 	{
 		return static_cast<enum_class_type>(flags);
 	}
