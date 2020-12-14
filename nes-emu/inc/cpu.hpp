@@ -15,7 +15,7 @@ enum class processor_status_register : std::uint8_t
 	none            = 0,
 	carry           = 1 << 0, //C
 	zero            = 1 << 1, //Z
-	irq_disable     = 1 << 2, //I
+	interrupt_disable     = 1 << 2, //I
 	decimal_mode    = 1 << 3, //D
 	break_command   = 1 << 4, //B
 	unused          = 1 << 5,
@@ -128,72 +128,6 @@ enum class opcode
 };
 
 
-
-enum class InstructionType
-{
-	None = 0,
-	ADC,	//Add Memory to Accumulator with Carry
-	AND,	//AND Memory with Accumulator
-	ASL,	//Shift Left One Bit (Memory or Accumulator)
-	BCC,	//Branch on Carry Clear
-	BCS,	//Branch on Carry Set
-	BEQ,	//Branch on Result Zero
-	BIT,	//Test Bits in Memory with Accumulator
-	BMI,	//Branch on Result Minus
-	BNE,	//Branch on Result not Zero
-	BPL,	//Branch on Result Plus
-	BRK,	//Force Break
-	BVC,	//Branch on Overflow Clear
-	BVS,	//Branch on Overflow Set
-	CLC,	//Clear Carry Flag
-	CLD,	//Clear Decimal Mode
-	CLI,	//CLear Interrupt Disable Bit
-	CLV,	//Clear Overflow Flag
-	CMP,	//Compare Memory and Accumulator
-	CPX,	//Compare Memory and Index X
-	CPY,	//Comapre Memory and Index Y
-	DEC,	//Decrement Memory by One
-	DEX,	//Decrement Index X by One
-	DEY,	//Decrement Index Y by One
-	DCP,	//DECs the contents of a memory location and then CMPs the result with the Accumulator
-	EOR,	//XOR Memory with Accumulator
-	INC,	//Increment Memory by One
-	INX,	//Increment Index X by One
-	INY,	//Increment Index Y by One
-	JMP,	//Jump to New Location
-	JSR,	//Jump to New Location Saving Return Address
-	LDA,	//Load Accumulator with Memory
-	LDX,	//Load Index X with Memory
-	LAX,	//Load Accumulator And X with Memory
-	LDY,	//Load Index Y with Memory
-	LSR,	//Shift One Bit Right (Memory or Accumulator)
-	NOP,	//No Operation
-	ORA,	//OR Memory with Accumulator
-	PHA,	//Push Accumulator on Stack
-	PHP,	//Push Processor Status on Stack
-	PLA,	//Pull Accumulator from Stack
-	PLP,	//Pull Processor Status from Stack
-	ROL,	//Rotate One Bit Left (Memory or Accumulator)
-	ROR,	//Rotate One Bit Right (Memory or Accumulator)
-	RTI,	//Return from Interrupt
-	RTS,	//Return from Subroutine
-	SBC,	//Subtract Memory from Accumulator with Borrow
-	SEC,	//Set Carry Flag
-	SED,	//Set Decimal Mode
-	SEI,	//Set Interrupt Disable Status
-	STA,	//Store Accumulator in Memory
-	STX,	//Store Index X in Memory
-	STY,	//Store Index Y in Memory
-	SAX,	//Store X & A in Memory
-	TAX,	//Transfer Accumulator to Index X
-	TAY,	//Transfer Accumulator to Index Y
-	TSX,	//Transfer Stack Pointer to Index X
-	TXA,	//Transfer Index X to Accumulator
-	TXS,	//Transfer Index X to Stack Register
-	TYA,	//Transfer Index Y to Accumulator
-};
-
-
 class cpu;
 class instruction
 {
@@ -248,6 +182,9 @@ public:
 	[[nodiscard]] bool address_mode_indirect_indexed();
 	
 	//opcodes
+	template<processor_status_register flag, bool is_set>
+	[[nodiscard]] bool branch();
+	[[nodiscard]] bool compare(std::uint8_t target_register);
 	//I can only apologise here...
 	[[nodiscard]] bool instruction_adc(); [[nodiscard]] bool instruction_and(); [[nodiscard]] bool instruction_asl(); [[nodiscard]] bool instruction_bcc();
 	[[nodiscard]] bool instruction_bcs(); [[nodiscard]] bool instruction_beq(); [[nodiscard]] bool instruction_bit(); [[nodiscard]] bool instruction_bmi();
@@ -303,5 +240,25 @@ private:
 	std::uint8_t opcode = 0x00;                 //current instruction
 	std::uint8_t cycles_remaining = 0;          //remaining cycles for current instruction
 	std::uint32_t clock_count = 0;              //clock count accumulator
+
+	std::uint16_t stack_address_offset = 0x0100;
 };
-}	 // namespace nes
+
+template <processor_status_register flag, bool is_set>
+bool nes_emu::cpu::branch()
+{
+	if (get_flag(flag) == is_set)
+	{
+		++cycles_remaining;
+		address_absolute = register_program_counter + address_relative;
+
+		if ((address_absolute & 0xFF00) != (register_program_counter & 0xFF00))
+			++cycles_remaining;
+
+		register_program_counter = address_absolute;
+	}
+
+	return false;
+}
+
+}	 // namespace nes_emu

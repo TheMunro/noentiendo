@@ -337,50 +337,17 @@ bool nes_emu::cpu::instruction_asl()
 
 bool nes_emu::cpu::instruction_bcc()
 {
-	if (!get_flag(processor_status_register::carry))
-	{
-		++cycles_remaining;
-		address_absolute = register_program_counter + address_relative;
-
-		if ((address_absolute & 0xFF00) != (register_program_counter & 0xFF00))
-			++cycles_remaining;
-
-		register_program_counter = address_absolute;
-	}
-	
-	return false;
+	return branch<processor_status_register::carry, false>();
 }
 
 bool nes_emu::cpu::instruction_bcs()
 {
-	if (get_flag(processor_status_register::carry))
-	{
-		++cycles_remaining;
-		address_absolute = register_program_counter + address_relative;
-
-		if ((address_absolute & 0xFF00) != (register_program_counter & 0xFF00))
-			++cycles_remaining;
-
-		register_program_counter = address_absolute;
-	}
-
-	return false;
+	return branch<processor_status_register::carry, true>();
 }
 
 bool nes_emu::cpu::instruction_beq()
 {
-	if (get_flag(processor_status_register::zero))
-	{
-		++cycles_remaining;
-		address_absolute = register_program_counter + address_relative;
-
-		if ((address_absolute & 0xFF00) != (register_program_counter & 0xFF00))
-			++cycles_remaining;
-
-		register_program_counter = address_absolute;
-	}
-
-	return false;
+	return branch<processor_status_register::zero, true>();
 }
 
 bool nes_emu::cpu::instruction_bit()
@@ -398,134 +365,189 @@ bool nes_emu::cpu::instruction_bit()
 
 bool nes_emu::cpu::instruction_bmi()
 {
-	if (get_flag(processor_status_register::negative))
-	{
-		++cycles_remaining;
-		address_absolute = register_program_counter + address_relative;
-
-		if ((address_absolute & 0xFF00) != (register_program_counter & 0xFF00))
-			++cycles_remaining;
-
-		register_program_counter = address_absolute;
-	}
-
-	return false;
+	return branch<processor_status_register::negative, true>();
 }
 
 bool nes_emu::cpu::instruction_bne()
 {
-	if (!get_flag(processor_status_register::zero))
-	{
-		++cycles_remaining;
-		address_absolute = register_program_counter + address_relative;
-
-		if ((address_absolute & 0xFF00) != (register_program_counter & 0xFF00))
-			++cycles_remaining;
-
-		register_program_counter = address_absolute;
-	}
-
-	return false;
+	return branch<processor_status_register::zero, false>();
 }
 
 bool nes_emu::cpu::instruction_bpl()
 {
-	if (!get_flag(processor_status_register::negative))
-	{
-		++cycles_remaining;
-		address_absolute = register_program_counter + address_relative;
-
-		if ((address_absolute & 0xFF00) != (register_program_counter & 0xFF00))
-			++cycles_remaining;
-
-		register_program_counter = address_absolute;
-	}
-
-	return false;
+	return branch<processor_status_register::negative, false>();
 }
 
 bool nes_emu::cpu::instruction_brk()
 {
+	//program counter is incremented here as brk uses implicit addressing, which does not modify the program counter
+	//so we have to increment here to ensure that we get the next opcode to cache in the stack
+	++register_program_counter;
+	
+	const auto hi_byte = static_cast<std::uint8_t>(register_program_counter >> 8);
+	const auto lo_byte = static_cast<std::uint8_t>(register_program_counter);
+	
+	set_flag(processor_status_register::interrupt_disable, true);
+
+	//push program counter to the stack
+	//TODO: Check for overflow of the stack memory page?
+	write(stack_address_offset + register_stack_pointer, hi_byte);
+	register_stack_pointer++;
+	write(stack_address_offset + register_stack_pointer, lo_byte);
+	register_stack_pointer++;
+
+	//push status to the stack
+	set_flag(processor_status_register::break_command, true);
+	write(stack_address_offset + register_stack_pointer, static_cast<std::uint8_t>(register_program_counter));
+	register_stack_pointer++;
+	set_flag(processor_status_register::break_command, false);
+
+	//read interrupt
+	const auto irq_hi_byte = read(0xFFFF);
+	const auto irg_lo_byte = read(0xFFFE);
+
+	register_program_counter = static_cast<std::uint16_t>(irq_hi_byte << 8) + irg_lo_byte;
+	
 	return false;
 }
 
 bool nes_emu::cpu::instruction_bvc()
 {
-	return false;
+	return branch<processor_status_register::overflow, false>();
 }
 
 bool nes_emu::cpu::instruction_bvs()
 {
-	return false;
+	return branch<processor_status_register::overflow, true>();
 }
 
 bool nes_emu::cpu::instruction_clc()
 {
+	set_flag(processor_status_register::carry, false);
 	return false;
 }
 
 bool nes_emu::cpu::instruction_cld()
 {
+	set_flag(processor_status_register::decimal_mode, false);
 	return false;
 }
 
 bool nes_emu::cpu::instruction_cli()
 {
+	set_flag(processor_status_register::interrupt_disable, false);
 	return false;
 }
 
 bool nes_emu::cpu::instruction_clv()
 {
+	set_flag(processor_status_register::overflow, false);
+	return false;
+}
+
+bool nes_emu::cpu::compare(std::uint8_t target_register)
+{
+	fetch();
+
+	const std::uint16_t result = target_register - fetched;
+
+	set_flag(processor_status_register::carry, register_accumulator >= fetched);
+	set_flag(processor_status_register::overflow, (register_accumulator & fetched) == 0x00);
+	set_flag(processor_status_register::negative, result & (1 << 7));
+
 	return false;
 }
 
 bool nes_emu::cpu::instruction_cmp()
 {
-	return false;
+	return compare(register_accumulator);
 }
 
 bool nes_emu::cpu::instruction_cpx()
 {
-	return false;
+	return compare(register_x);
 }
 
 bool nes_emu::cpu::instruction_cpy()
 {
-	return false;
+	return compare(register_y);
 }
 
 bool nes_emu::cpu::instruction_dec()
 {
+	fetch();
+
+	const std::uint16_t result = fetched - 1;
+	write(address_absolute, result & 0x00FF);
+
+	set_flag(processor_status_register::zero, result == 0x0000);
+	set_flag(processor_status_register::negative, result & (1 << 7));
+	
 	return false;
 }
 
 bool nes_emu::cpu::instruction_dex()
 {
+	--register_x;
+
+	set_flag(processor_status_register::zero, register_x == 0x0000);
+	set_flag(processor_status_register::negative, register_x & (1 << 7));
+	
 	return false;
 }
 
 bool nes_emu::cpu::instruction_dey()
 {
+	--register_y;
+
+	set_flag(processor_status_register::zero, register_y == 0x0000);
+	set_flag(processor_status_register::negative, register_y & (1 << 7));
+	
 	return false;
 }
 
 bool nes_emu::cpu::instruction_eor()
 {
+	fetch();
+	
+	register_accumulator ^= fetched;
+
+	set_flag(processor_status_register::zero, register_accumulator == 0x0000);
+	set_flag(processor_status_register::negative, register_accumulator & (1 << 7));
+	
 	return false;
 }
 
 bool nes_emu::cpu::instruction_inc()
 {
+	fetch();
+
+	const std::uint16_t result = fetched + 1;
+	write(address_absolute, result & 0x00FF);
+
+	set_flag(processor_status_register::zero, result == 0x0000);
+	set_flag(processor_status_register::negative, result & (1 << 7));
+
 	return false;
 }
 
 bool nes_emu::cpu::instruction_inx()
 {
+	++register_x;
+
+	set_flag(processor_status_register::zero, register_x == 0x0000);
+	set_flag(processor_status_register::negative, register_x & (1 << 7));
+
 	return false;
 }
 
 bool nes_emu::cpu::instruction_iny()
 {
+	++register_y;
+
+	set_flag(processor_status_register::zero, register_y == 0x0000);
+	set_flag(processor_status_register::negative, register_y & (1 << 7));
+
 	return false;
 }
 
