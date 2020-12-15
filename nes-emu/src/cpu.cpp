@@ -21,11 +21,7 @@ void nes_emu::cpu::clock()
 		const auto& instruction = instructions[opcode];
 		cycles_remaining = instruction.cycles;
 
-		//can't use std::invoke unless I have the method name here... templates perhaps?
-		const auto additional_cycle_addressing_mode = (this->*instruction.addressing_mode)();
-		const auto additional_cycle_execute = (this->*instruction.execute)();
-
-		cycles_remaining += (additional_cycle_addressing_mode & additional_cycle_execute);
+		std::invoke(instruction.execute, *this);
 	}
 
 	++clock_count;
@@ -44,33 +40,26 @@ void nes_emu::cpu::non_maskable_interrupt()
 {
 }
 
-void nes_emu::cpu::fetch()
-{
-	//oh no, this is horrible!
-	if (!(instructions[opcode].addressing_mode == &nes_emu::cpu::address_mode_implicit))
-		fetched = read(register_accumulator);
-}
-
 constexpr std::array<nes_emu::instruction, 256> nes_emu::cpu::build_instructions()
 {
 	std::array<instruction, 256> instructions{};
 
 	//AND
-	instructions[0x61] = instruction{opcode::AND, false, 2, 6, &cpu::instruction_and, &cpu::address_mode_indexed_indirect};
-	instructions[0x65] = instruction{opcode::AND, false, 2, 3, &cpu::instruction_and, &cpu::address_mode_zero_page};
-	instructions[0x69] = instruction{opcode::AND, false, 2, 2, &cpu::instruction_and, &cpu::address_mode_immediate};
-	instructions[0x6D] = instruction{opcode::AND, false, 3, 4, &cpu::instruction_and, &cpu::address_mode_absolute};
-	instructions[0x71] = instruction{opcode::AND, false, 2, 5, &cpu::instruction_and, &cpu::address_mode_indirect_indexed};
-	instructions[0x75] = instruction{opcode::AND, false, 2, 4, &cpu::instruction_and, &cpu::address_mode_zero_page_x};
-	instructions[0x79] = instruction{opcode::AND, false, 3, 4, &cpu::instruction_and, &cpu::address_mode_absolute_y};
-	instructions[0x7D] = instruction{opcode::AND, false, 3, 4, &cpu::instruction_and, &cpu::address_mode_absolute_x};
-
-	//ASL
-	instructions[0x0A] = instruction{opcode::ASL, false, 1, 2, &cpu::instruction_asl, &cpu::address_mode_accumulator};
-	instructions[0x06] = instruction{opcode::ASL, false, 2, 5, &cpu::instruction_asl, &cpu::address_mode_zero_page};
-	instructions[0x16] = instruction{opcode::ASL, false, 2, 6, &cpu::instruction_asl, &cpu::address_mode_zero_page_x};
-	instructions[0x0E] = instruction{opcode::ASL, false, 3, 6, &cpu::instruction_asl, &cpu::address_mode_absolute};
-	instructions[0x1E] = instruction{opcode::ASL, false, 3, 7, &cpu::instruction_asl, &cpu::address_mode_absolute_x};
+	//instructions[0x61] = instruction{opcode::AND, false, 2, 6, &cpu::instruction_and, &cpu::address_mode_indexed_indirect};
+	//instructions[0x65] = instruction{opcode::AND, false, 2, 3, &cpu::instruction_and, &cpu::address_mode_zero_page};
+	//instructions[0x69] = instruction{opcode::AND, false, 2, 2, &cpu::instruction_and, &cpu::address_mode_immediate};
+	//instructions[0x6D] = instruction{opcode::AND, false, 3, 4, &cpu::instruction_and, &cpu::address_mode_absolute};
+	//instructions[0x71] = instruction{opcode::AND, false, 2, 5, &cpu::instruction_and, &cpu::address_mode_indirect_indexed};
+	//instructions[0x75] = instruction{opcode::AND, false, 2, 4, &cpu::instruction_and, &cpu::address_mode_zero_page_x};
+	//instructions[0x79] = instruction{opcode::AND, false, 3, 4, &cpu::instruction_and, &cpu::address_mode_absolute_y};
+	//instructions[0x7D] = instruction{opcode::AND, false, 3, 4, &cpu::instruction_and, &cpu::address_mode_absolute_x};
+	//
+	////ASL
+	//instructions[0x0A] = instruction{opcode::ASL, false, 1, 2, &cpu::instruction_asl, &cpu::address_mode_accumulator};
+	//instructions[0x06] = instruction{opcode::ASL, false, 2, 5, &cpu::instruction_asl, &cpu::address_mode_zero_page};
+	//instructions[0x16] = instruction{opcode::ASL, false, 2, 6, &cpu::instruction_asl, &cpu::address_mode_zero_page_x};
+	//instructions[0x0E] = instruction{opcode::ASL, false, 3, 6, &cpu::instruction_asl, &cpu::address_mode_absolute};
+	//instructions[0x1E] = instruction{opcode::ASL, false, 3, 7, &cpu::instruction_asl, &cpu::address_mode_absolute_x};
 
 	
 	return instructions;
@@ -197,14 +186,14 @@ bool nes_emu::cpu::address_mode_absolute_x()
 	//register to an absolute address. For example, this 6502 code can be used to fill 10 bytes
 	//with $FF starting at address $1009, counting down to address $1000.
 	
-	address_mode_absolute();
+	const auto ret = address_mode_absolute();
 
 	const auto hi_byte = address_absolute & 0xFF00;
 	address_absolute += register_x;
 	if ((hi_byte & (address_absolute & 0xFF00)) == 0xFF00)
 		return true; //new page, use result to increase cycle count
 
-	return false;
+	return ret & false;
 }
 
 bool nes_emu::cpu::address_mode_absolute_y()
@@ -213,14 +202,14 @@ bool nes_emu::cpu::address_mode_absolute_y()
 	//register to an absolute address. For example, this 6502 code can be used to fill 10 bytes
 	//with $FF starting at address $1009, counting down to address $1000.
 	
-	address_mode_absolute();
+	const auto ret = address_mode_absolute();
 
 	const auto hi_byte = address_absolute & 0xFF00;
 	address_absolute += register_y;
 	if ((hi_byte & (address_absolute & 0xFF00)) == 0xFF00)
 		return true; //new page, use result to increase cycle count
 
-	return false;
+	return ret & false;
 }
 
 bool nes_emu::cpu::address_mode_indirect()
@@ -299,399 +288,3 @@ bool nes_emu::cpu::address_mode_indirect_indexed()
 	return false;
 }
 
-bool nes_emu::cpu::instruction_adc()
-{
-	//https://www.youtube.com/watch?v=yf_YWiqqv34
-	return false;
-}
-
-bool nes_emu::cpu::instruction_and()
-{
-	fetch();
-	
-	register_accumulator &= fetched;
-	
-	set_flag(processor_status_register::zero, register_accumulator == 0x00);
-	set_flag(processor_status_register::negative, register_accumulator & 0x80);
-	
-	return true;
-}
-
-bool nes_emu::cpu::instruction_asl()
-{
-	fetch();
-
-	const std::uint16_t result = static_cast<std::uint16_t>(fetched) << 1;
-	
-	set_flag(processor_status_register::carry, (result & 0xFF00) != 0x00);
-	set_flag(processor_status_register::zero, (result & 0x00FF) == 0x00);
-	set_flag(processor_status_register::negative, result & 0x80);
-
-	if ((instructions[opcode].addressing_mode == &nes_emu::cpu::address_mode_implicit))
-		register_accumulator = result & 0x00FF;
-	else
-		write(address_absolute, result & 0x00FF);
-	
-	return false;
-}
-
-bool nes_emu::cpu::instruction_bcc()
-{
-	return branch<processor_status_register::carry, false>();
-}
-
-bool nes_emu::cpu::instruction_bcs()
-{
-	return branch<processor_status_register::carry, true>();
-}
-
-bool nes_emu::cpu::instruction_beq()
-{
-	return branch<processor_status_register::zero, true>();
-}
-
-bool nes_emu::cpu::instruction_bit()
-{
-	fetch();
-
-	const std::uint16_t result = register_accumulator & fetched;
-
-	set_flag(processor_status_register::zero, (result & 0x00FF) == 0x00);
-	set_flag(processor_status_register::overflow, fetched & (1 << 6));
-	set_flag(processor_status_register::negative, fetched & (1 << 7));
-	
-	return false;
-}
-
-bool nes_emu::cpu::instruction_bmi()
-{
-	return branch<processor_status_register::negative, true>();
-}
-
-bool nes_emu::cpu::instruction_bne()
-{
-	return branch<processor_status_register::zero, false>();
-}
-
-bool nes_emu::cpu::instruction_bpl()
-{
-	return branch<processor_status_register::negative, false>();
-}
-
-bool nes_emu::cpu::instruction_brk()
-{
-	//program counter is incremented here as brk uses implicit addressing, which does not modify the program counter
-	//so we have to increment here to ensure that we get the next opcode to cache in the stack
-	++register_program_counter;
-	
-	const auto hi_byte = static_cast<std::uint8_t>(register_program_counter >> 8);
-	const auto lo_byte = static_cast<std::uint8_t>(register_program_counter);
-	
-	set_flag(processor_status_register::interrupt_disable, true);
-
-	//push program counter to the stack
-	//TODO: Check for overflow of the stack memory page?
-	write(stack_address_offset + register_stack_pointer, hi_byte);
-	register_stack_pointer++;
-	write(stack_address_offset + register_stack_pointer, lo_byte);
-	register_stack_pointer++;
-
-	//push status to the stack
-	set_flag(processor_status_register::break_command, true);
-	write(stack_address_offset + register_stack_pointer, static_cast<std::uint8_t>(register_program_counter));
-	register_stack_pointer++;
-	set_flag(processor_status_register::break_command, false);
-
-	//read interrupt
-	const auto irq_hi_byte = read(0xFFFF);
-	const auto irg_lo_byte = read(0xFFFE);
-
-	register_program_counter = static_cast<std::uint16_t>(irq_hi_byte << 8) + irg_lo_byte;
-	
-	return false;
-}
-
-bool nes_emu::cpu::instruction_bvc()
-{
-	return branch<processor_status_register::overflow, false>();
-}
-
-bool nes_emu::cpu::instruction_bvs()
-{
-	return branch<processor_status_register::overflow, true>();
-}
-
-bool nes_emu::cpu::instruction_clc()
-{
-	set_flag(processor_status_register::carry, false);
-	return false;
-}
-
-bool nes_emu::cpu::instruction_cld()
-{
-	set_flag(processor_status_register::decimal_mode, false);
-	return false;
-}
-
-bool nes_emu::cpu::instruction_cli()
-{
-	set_flag(processor_status_register::interrupt_disable, false);
-	return false;
-}
-
-bool nes_emu::cpu::instruction_clv()
-{
-	set_flag(processor_status_register::overflow, false);
-	return false;
-}
-
-bool nes_emu::cpu::compare(std::uint8_t target_register)
-{
-	fetch();
-
-	const std::uint16_t result = target_register - fetched;
-
-	set_flag(processor_status_register::carry, register_accumulator >= fetched);
-	set_flag(processor_status_register::overflow, (register_accumulator & fetched) == 0x00);
-	set_flag(processor_status_register::negative, result & (1 << 7));
-
-	return false;
-}
-
-bool nes_emu::cpu::instruction_cmp()
-{
-	return compare(register_accumulator);
-}
-
-bool nes_emu::cpu::instruction_cpx()
-{
-	return compare(register_x);
-}
-
-bool nes_emu::cpu::instruction_cpy()
-{
-	return compare(register_y);
-}
-
-bool nes_emu::cpu::instruction_dec()
-{
-	fetch();
-
-	const std::uint16_t result = fetched - 1;
-	write(address_absolute, result & 0x00FF);
-
-	set_flag(processor_status_register::zero, result == 0x0000);
-	set_flag(processor_status_register::negative, result & (1 << 7));
-	
-	return false;
-}
-
-bool nes_emu::cpu::instruction_dex()
-{
-	--register_x;
-
-	set_flag(processor_status_register::zero, register_x == 0x0000);
-	set_flag(processor_status_register::negative, register_x & (1 << 7));
-	
-	return false;
-}
-
-bool nes_emu::cpu::instruction_dey()
-{
-	--register_y;
-
-	set_flag(processor_status_register::zero, register_y == 0x0000);
-	set_flag(processor_status_register::negative, register_y & (1 << 7));
-	
-	return false;
-}
-
-bool nes_emu::cpu::instruction_eor()
-{
-	fetch();
-	
-	register_accumulator ^= fetched;
-
-	set_flag(processor_status_register::zero, register_accumulator == 0x0000);
-	set_flag(processor_status_register::negative, register_accumulator & (1 << 7));
-	
-	return false;
-}
-
-bool nes_emu::cpu::instruction_inc()
-{
-	fetch();
-
-	const std::uint16_t result = fetched + 1;
-	write(address_absolute, result & 0x00FF);
-
-	set_flag(processor_status_register::zero, result == 0x0000);
-	set_flag(processor_status_register::negative, result & (1 << 7));
-
-	return false;
-}
-
-bool nes_emu::cpu::instruction_inx()
-{
-	++register_x;
-
-	set_flag(processor_status_register::zero, register_x == 0x0000);
-	set_flag(processor_status_register::negative, register_x & (1 << 7));
-
-	return false;
-}
-
-bool nes_emu::cpu::instruction_iny()
-{
-	++register_y;
-
-	set_flag(processor_status_register::zero, register_y == 0x0000);
-	set_flag(processor_status_register::negative, register_y & (1 << 7));
-
-	return false;
-}
-
-bool nes_emu::cpu::instruction_jmp()
-{
-	return false;
-}
-
-bool nes_emu::cpu::instruction_jsr()
-{
-	return false;
-}
-
-bool nes_emu::cpu::instruction_lda()
-{
-	return false;
-}
-
-bool nes_emu::cpu::instruction_ldx()
-{
-	return false;
-}
-
-bool nes_emu::cpu::instruction_ldy()
-{
-	return false;
-}
-
-bool nes_emu::cpu::instruction_lsr()
-{
-	return false;
-}
-
-bool nes_emu::cpu::instruction_nop()
-{
-	return false;
-}
-
-bool nes_emu::cpu::instruction_ora()
-{
-	return false;
-}
-
-bool nes_emu::cpu::instruction_pha()
-{
-	return false;
-}
-
-bool nes_emu::cpu::instruction_php()
-{
-	return false;
-}
-
-bool nes_emu::cpu::instruction_pla()
-{
-	return false;
-}
-
-bool nes_emu::cpu::instruction_plp()
-{
-	return false;
-}
-
-bool nes_emu::cpu::instruction_rol()
-{
-	return false;
-}
-
-bool nes_emu::cpu::instruction_ror()
-{
-	return false;
-}
-
-bool nes_emu::cpu::instruction_rti()
-{
-	return false;
-}
-
-bool nes_emu::cpu::instruction_rts()
-{
-	return false;
-}
-
-bool nes_emu::cpu::instruction_sbc()
-{
-	return false;
-}
-
-bool nes_emu::cpu::instruction_sec()
-{
-	return false;
-}
-
-bool nes_emu::cpu::instruction_sed()
-{
-	return false;
-}
-
-bool nes_emu::cpu::instruction_sei()
-{
-	return false;
-}
-
-bool nes_emu::cpu::instruction_sta()
-{
-	return false;
-}
-
-bool nes_emu::cpu::instruction_stx()
-{
-	return false;
-}
-
-bool nes_emu::cpu::instruction_sty()
-{
-	return false;
-}
-
-bool nes_emu::cpu::instruction_tax()
-{
-	return false;
-}
-
-bool nes_emu::cpu::instruction_tay()
-{
-	return false;
-}
-
-bool nes_emu::cpu::instruction_tsx()
-{
-	return false;
-}
-
-bool nes_emu::cpu::instruction_txa()
-{
-	return false;
-}
-
-bool nes_emu::cpu::instruction_txs()
-{
-	return false;
-}
-
-bool nes_emu::cpu::instruction_tya()
-{
-	return false;
-}

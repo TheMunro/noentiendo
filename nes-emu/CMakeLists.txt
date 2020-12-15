@@ -7,6 +7,7 @@ set(NES_EMU_INCLUDES
 	"inc/nes.hpp"
 	"inc/cpu.hpp"
 	"inc/bus.hpp"
+	"inc/instructions.hpp"
 )
 
 set(NES_EMU_SOURCES

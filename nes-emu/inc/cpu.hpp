@@ -129,21 +129,27 @@ enum class opcode
 
 
 class cpu;
+
 class instruction
 {
+protected:
+	using ExecuteFunc = bool(cpu::*)();
+
 public:
 	opcode opcode;
 	bool complete = false;
 	uint8_t bytes = 0;
 	uint8_t cycles = 0;
 
-	bool (cpu::*execute)() = nullptr;
-	bool (cpu::*addressing_mode)() = nullptr;
+	ExecuteFunc execute;
 };
 
 
 class cpu
 {
+protected:
+	using AddressingModeFunc = bool(cpu::*)();
+
 public:
 	cpu(const bus& bus)
 		: bus{bus}
@@ -158,6 +164,7 @@ public:
 	void non_maskable_interrupt();
 
 	//data
+	template <nes_emu::cpu::AddressingModeFunc Mode>
 	void fetch();
 	[[nodiscard]] std::uint8_t read(std::uint16_t address, bool read_only = false) const;
 	void write(std::uint16_t address, std::uint8_t data) const;
@@ -182,24 +189,25 @@ public:
 	[[nodiscard]] bool address_mode_indirect_indexed();
 	
 	//opcodes
-	template<processor_status_register flag, bool is_set>
-	[[nodiscard]] bool branch();
-	[[nodiscard]] bool compare(std::uint8_t target_register);
+	template <AddressingModeFunc Mode, processor_status_register flag, bool is_set>
+	void branch();
+	template <AddressingModeFunc Mode>
+	void compare(std::uint8_t target_register);
 	//I can only apologise here...
-	[[nodiscard]] bool instruction_adc(); [[nodiscard]] bool instruction_and(); [[nodiscard]] bool instruction_asl(); [[nodiscard]] bool instruction_bcc();
-	[[nodiscard]] bool instruction_bcs(); [[nodiscard]] bool instruction_beq(); [[nodiscard]] bool instruction_bit(); [[nodiscard]] bool instruction_bmi();
-	[[nodiscard]] bool instruction_bne(); [[nodiscard]] bool instruction_bpl(); [[nodiscard]] bool instruction_brk(); [[nodiscard]] bool instruction_bvc();
-	[[nodiscard]] bool instruction_bvs(); [[nodiscard]] bool instruction_clc(); [[nodiscard]] bool instruction_cld(); [[nodiscard]] bool instruction_cli();
-	[[nodiscard]] bool instruction_clv(); [[nodiscard]] bool instruction_cmp(); [[nodiscard]] bool instruction_cpx(); [[nodiscard]] bool instruction_cpy();
-	[[nodiscard]] bool instruction_dec(); [[nodiscard]] bool instruction_dex(); [[nodiscard]] bool instruction_dey(); [[nodiscard]] bool instruction_eor();
-	[[nodiscard]] bool instruction_inc(); [[nodiscard]] bool instruction_inx(); [[nodiscard]] bool instruction_iny(); [[nodiscard]] bool instruction_jmp();
-	[[nodiscard]] bool instruction_jsr(); [[nodiscard]] bool instruction_lda(); [[nodiscard]] bool instruction_ldx(); [[nodiscard]] bool instruction_ldy();
-	[[nodiscard]] bool instruction_lsr(); [[nodiscard]] bool instruction_nop(); [[nodiscard]] bool instruction_ora(); [[nodiscard]] bool instruction_pha();
-	[[nodiscard]] bool instruction_php(); [[nodiscard]] bool instruction_pla(); [[nodiscard]] bool instruction_plp(); [[nodiscard]] bool instruction_rol();
-	[[nodiscard]] bool instruction_ror(); [[nodiscard]] bool instruction_rti(); [[nodiscard]] bool instruction_rts(); [[nodiscard]] bool instruction_sbc();
-	[[nodiscard]] bool instruction_sec(); [[nodiscard]] bool instruction_sed(); [[nodiscard]] bool instruction_sei(); [[nodiscard]] bool instruction_sta();
-	[[nodiscard]] bool instruction_stx(); [[nodiscard]] bool instruction_sty(); [[nodiscard]] bool instruction_tax(); [[nodiscard]] bool instruction_tay();
-	[[nodiscard]] bool instruction_tsx(); [[nodiscard]] bool instruction_txa(); [[nodiscard]] bool instruction_txs(); [[nodiscard]] bool instruction_tya();
+	template<AddressingModeFunc Mode> void instruction_adc(); template<AddressingModeFunc Mode> void instruction_and(); template<AddressingModeFunc Mode> void instruction_asl(); template<AddressingModeFunc Mode> void instruction_bcc();
+	template<AddressingModeFunc Mode> void instruction_bcs(); template<AddressingModeFunc Mode> void instruction_beq(); template<AddressingModeFunc Mode> void instruction_bit(); template<AddressingModeFunc Mode> void instruction_bmi();
+	template<AddressingModeFunc Mode> void instruction_bne(); template<AddressingModeFunc Mode> void instruction_bpl(); template<AddressingModeFunc Mode> void instruction_brk(); template<AddressingModeFunc Mode> void instruction_bvc();
+	template<AddressingModeFunc Mode> void instruction_bvs(); template<AddressingModeFunc Mode> void instruction_clc(); template<AddressingModeFunc Mode> void instruction_cld(); template<AddressingModeFunc Mode> void instruction_cli();
+	template<AddressingModeFunc Mode> void instruction_clv(); template<AddressingModeFunc Mode> void instruction_cmp(); template<AddressingModeFunc Mode> void instruction_cpx(); template<AddressingModeFunc Mode> void instruction_cpy();
+	template<AddressingModeFunc Mode> void instruction_dec(); template<AddressingModeFunc Mode> void instruction_dex(); template<AddressingModeFunc Mode> void instruction_dey(); template<AddressingModeFunc Mode> void instruction_eor();
+	template<AddressingModeFunc Mode> void instruction_inc(); template<AddressingModeFunc Mode> void instruction_inx(); template<AddressingModeFunc Mode> void instruction_iny(); template<AddressingModeFunc Mode> void instruction_jmp();
+	template<AddressingModeFunc Mode> void instruction_jsr(); template<AddressingModeFunc Mode> void instruction_lda(); template<AddressingModeFunc Mode> void instruction_ldx(); template<AddressingModeFunc Mode> void instruction_ldy();
+	template<AddressingModeFunc Mode> void instruction_lsr(); template<AddressingModeFunc Mode> void instruction_nop(); template<AddressingModeFunc Mode> void instruction_ora(); template<AddressingModeFunc Mode> void instruction_pha();
+	template<AddressingModeFunc Mode> void instruction_php(); template<AddressingModeFunc Mode> void instruction_pla(); template<AddressingModeFunc Mode> void instruction_plp(); template<AddressingModeFunc Mode> void instruction_rol();
+	template<AddressingModeFunc Mode> void instruction_ror(); template<AddressingModeFunc Mode> void instruction_rti(); template<AddressingModeFunc Mode> void instruction_rts(); template<AddressingModeFunc Mode> void instruction_sbc();
+	template<AddressingModeFunc Mode> void instruction_sec(); template<AddressingModeFunc Mode> void instruction_sed(); template<AddressingModeFunc Mode> void instruction_sei(); template<AddressingModeFunc Mode> void instruction_sta();
+	template<AddressingModeFunc Mode> void instruction_stx(); template<AddressingModeFunc Mode> void instruction_sty(); template<AddressingModeFunc Mode> void instruction_tax(); template<AddressingModeFunc Mode> void instruction_tay();
+	template<AddressingModeFunc Mode> void instruction_tsx(); template<AddressingModeFunc Mode> void instruction_txa(); template<AddressingModeFunc Mode> void instruction_txs(); template<AddressingModeFunc Mode> void instruction_tya();
 
 	//flags
 	[[nodiscard]] bool get_flag(const processor_status_register flag) const
@@ -244,21 +252,11 @@ private:
 	std::uint16_t stack_address_offset = 0x0100;
 };
 
-template <processor_status_register flag, bool is_set>
-bool nes_emu::cpu::branch()
+template <nes_emu::cpu::AddressingModeFunc Mode>
+void nes_emu::cpu::fetch()
 {
-	if (get_flag(flag) == is_set)
-	{
-		++cycles_remaining;
-		address_absolute = register_program_counter + address_relative;
-
-		if ((address_absolute & 0xFF00) != (register_program_counter & 0xFF00))
-			++cycles_remaining;
-
-		register_program_counter = address_absolute;
-	}
-
-	return false;
+	if (!mode == &nes_emu::cpu::address_mode_implicit)
+		fetched = read(register_accumulator);
 }
 
 }	 // namespace nes_emu
