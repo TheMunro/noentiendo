@@ -15,7 +15,7 @@ void nes_emu::cpu::instruction_and()
 {
 	const auto page = std::invoke(Mode, *this);
 	
-	fetch<mode>();
+	fetch<Mode>();
 
 	register_accumulator &= fetched;
 
@@ -28,7 +28,7 @@ void nes_emu::cpu::instruction_asl()
 {
 	const auto page = std::invoke(Mode, *this);
 	
-	fetch<mode>();
+	fetch<Mode>();
 
 	const std::uint16_t result = static_cast<std::uint16_t>(fetched) << 1;
 
@@ -88,7 +88,7 @@ void nes_emu::cpu::instruction_bit()
 {
 	const auto page = std::invoke(Mode, *this);
 	
-	fetch<mode>();
+	fetch<Mode>();
 
 	const std::uint16_t result = register_accumulator & fetched;
 
@@ -121,7 +121,7 @@ void nes_emu::cpu::instruction_bpl()
 template <nes_emu::cpu::AddressingModeFunc Mode>
 void nes_emu::cpu::instruction_brk()
 {
-	auto page = std::invoke(Mode, *this);
+	const auto page = std::invoke(Mode, *this);
 	//program counter is incremented here as brk uses implicit addressing, which does not modify the program counter
 	//so we have to increment here to ensure that we get the next opcode to cache in the stack
 	++register_program_counter;
@@ -198,7 +198,7 @@ void nes_emu::cpu::compare(std::uint8_t& target_register)
 {
 	const auto page = std::invoke(Mode, *this);
 	
-	fetch<mode>();
+	fetch<Mode>();
 
 	const std::uint16_t result = target_register - fetched;
 
@@ -228,8 +228,8 @@ void nes_emu::cpu::instruction_cpy()
 template <nes_emu::cpu::AddressingModeFunc Mode>
 void nes_emu::cpu::instruction_dec()
 {
-	auto page = std::invoke(Mode, *this);
-	fetch<mode>();
+	const auto page = std::invoke(Mode, *this);
+	fetch<Mode>();
 
 	const std::uint16_t result = fetched - 1;
 	write(address_absolute, result & 0x00FF);
@@ -241,7 +241,7 @@ void nes_emu::cpu::instruction_dec()
 template <nes_emu::cpu::AddressingModeFunc Mode>
 void nes_emu::cpu::instruction_dex()
 {
-	auto page = std::invoke(Mode, *this);
+	const auto page = std::invoke(Mode, *this);
 	--register_x;
 
 	set_flag(processor_status_register::zero, register_x == 0x00);
@@ -251,7 +251,7 @@ void nes_emu::cpu::instruction_dex()
 template <nes_emu::cpu::AddressingModeFunc Mode>
 void nes_emu::cpu::instruction_dey()
 {
-	auto page = std::invoke(Mode, *this);
+	const auto page = std::invoke(Mode, *this);
 	--register_y;
 
 	set_flag(processor_status_register::zero, register_y == 0x00);
@@ -261,8 +261,8 @@ void nes_emu::cpu::instruction_dey()
 template <nes_emu::cpu::AddressingModeFunc Mode>
 void nes_emu::cpu::instruction_eor()
 {
-	auto page = std::invoke(Mode, *this);
-	fetch<mode>();
+	const auto page = std::invoke(Mode, *this);
+	fetch<Mode>();
 
 	register_accumulator ^= fetched;
 
@@ -273,8 +273,8 @@ void nes_emu::cpu::instruction_eor()
 template <nes_emu::cpu::AddressingModeFunc Mode>
 void nes_emu::cpu::instruction_inc()
 {
-	auto page = std::invoke(Mode, *this);
-	fetch<mode>();
+	const auto page = std::invoke(Mode, *this);
+	fetch<Mode>();
 
 	const std::uint16_t result = fetched + 1;
 	write(address_absolute, result & 0x00FF);
@@ -286,7 +286,7 @@ void nes_emu::cpu::instruction_inc()
 template <nes_emu::cpu::AddressingModeFunc Mode>
 void nes_emu::cpu::instruction_inx()
 {
-	auto page = std::invoke(Mode, *this);
+	const auto page = std::invoke(Mode, *this);
 	++register_x;
 
 	set_flag(processor_status_register::zero, register_x == 0x00);
@@ -296,7 +296,7 @@ void nes_emu::cpu::instruction_inx()
 template <nes_emu::cpu::AddressingModeFunc Mode>
 void nes_emu::cpu::instruction_iny()
 {
-	auto page = std::invoke(Mode, *this);
+	const auto page = std::invoke(Mode, *this);
 	++register_y;
 
 	set_flag(processor_status_register::zero, register_y == 0x00);
@@ -306,14 +306,14 @@ void nes_emu::cpu::instruction_iny()
 template <nes_emu::cpu::AddressingModeFunc Mode>
 void nes_emu::cpu::instruction_jmp()
 {
-	auto page = std::invoke(Mode, *this);
+	const auto page = std::invoke(Mode, *this);
 	register_program_counter = address_absolute;
 }
 
 template <nes_emu::cpu::AddressingModeFunc Mode>
 void nes_emu::cpu::instruction_jsr()
 {
-	auto page = std::invoke(Mode, *this);
+	const auto page = std::invoke(Mode, *this);
 
 	--register_program_counter;
 
@@ -326,9 +326,9 @@ void nes_emu::cpu::instruction_jsr()
 }
 
 template <nes_emu::cpu::AddressingModeFunc Mode>
-void load_register(std::uint8_t& target_register)
+void nes_emu::cpu::load_register(std::uint8_t& target_register)
 {
-	auto page = std::invoke(Mode, *this);
+	const auto page = std::invoke(Mode, *this);
 
 	fetch<Mode>();
 
@@ -336,185 +336,191 @@ void load_register(std::uint8_t& target_register)
 
 	set_flag(processor_status_register::zero, target_register == 0x00);
 	set_flag(processor_status_register::negative, target_register & 0x80);
+
+	if (page)
+		++cycles_remaining;
 }
 
 template <nes_emu::cpu::AddressingModeFunc Mode>
 void nes_emu::cpu::instruction_lda()
 {
-	auto page = std::invoke(Mode, *this);
-
-	fetch<Mode>();
-
-	register_accumulator = fetched;
-
-	set_flag(processor_status_register::zero, register_accumulator == 0x00);
-	set_flag(processor_status_register::negative, register_accumulator & 0x80);
+	load_register<Mode>(register_accumulator);
 }
 
 template <nes_emu::cpu::AddressingModeFunc Mode>
 void nes_emu::cpu::instruction_ldx()
 {
-	auto page = std::invoke(Mode, *this);
-	
-	fetch<Mode>();
-
-	register_x = fetched;
-
-	set_flag(processor_status_register::zero, register_x == 0x00);
-	set_flag(processor_status_register::negative, register_x & 0x80);
+	load_register<Mode>(register_x);
 }
 
 template <nes_emu::cpu::AddressingModeFunc Mode>
 void nes_emu::cpu::instruction_ldy()
 {
-	auto page = std::invoke(Mode, *this);
-	fetch<Mode>();
-
-	register_y = fetched;
-
-	set_flag(processor_status_register::zero, register_y == 0x00);
-	set_flag(processor_status_register::negative, register_y & 0x80);
+	load_register<Mode>(register_y);
 }
 
 template <nes_emu::cpu::AddressingModeFunc Mode>
 void nes_emu::cpu::instruction_lsr()
 {
-	auto page = std::invoke(Mode, *this);
+	const auto page = std::invoke(Mode, *this);
+	
+	fetch<Mode>();
+	
+	set_flag(processor_status_register::carry, fetched & 0x01);
+
+	const std::uint16_t result = fetched >> 1;
+
+	if (Mode == &cpu::address_mode_accumulator)
+		register_accumulator = result;
+	else
+		write(address_absolute, result);
+
+	set_flag(processor_status_register::zero, result & 0x00);
+	set_flag(processor_status_register::negative, result & 0x80);
 }
 
 template <nes_emu::cpu::AddressingModeFunc Mode>
 void nes_emu::cpu::instruction_nop()
 {
-	auto page = std::invoke(Mode, *this);
+	const auto page = std::invoke(Mode, *this);
 }
 
 template <nes_emu::cpu::AddressingModeFunc Mode>
 void nes_emu::cpu::instruction_ora()
 {
-	auto page = std::invoke(Mode, *this);
+	const auto page = std::invoke(Mode, *this);
+	fetch<Mode>();
+
+	register_accumulator |= fetched;
+
+	set_flag(processor_status_register::zero, register_accumulator == 0x00);
+	set_flag(processor_status_register::negative, register_accumulator & 0x80);
+
+	if (page)
+		++cycles_remaining;
 }
 
 template <nes_emu::cpu::AddressingModeFunc Mode>
 void nes_emu::cpu::instruction_pha()
 {
-	auto page = std::invoke(Mode, *this);
+	const auto page = std::invoke(Mode, *this);
 }
 
 template <nes_emu::cpu::AddressingModeFunc Mode>
 void nes_emu::cpu::instruction_php()
 {
-	auto page = std::invoke(Mode, *this);
+	const auto page = std::invoke(Mode, *this);
 }
 
 template <nes_emu::cpu::AddressingModeFunc Mode>
 void nes_emu::cpu::instruction_pla()
 {
-	auto page = std::invoke(Mode, *this);
+	const auto page = std::invoke(Mode, *this);
 }
 
 template <nes_emu::cpu::AddressingModeFunc Mode>
 void nes_emu::cpu::instruction_plp()
 {
-	auto page = std::invoke(Mode, *this);
+	const auto page = std::invoke(Mode, *this);
 }
 template <nes_emu::cpu::AddressingModeFunc Mode>
 void nes_emu::cpu::instruction_rol()
 {
-	auto page = std::invoke(Mode, *this);
+	const auto page = std::invoke(Mode, *this);
 }
 
 template <nes_emu::cpu::AddressingModeFunc Mode>
 void nes_emu::cpu::instruction_ror()
 {
-	auto page = std::invoke(Mode, *this);
+	const auto page = std::invoke(Mode, *this);
 }
 
 template <nes_emu::cpu::AddressingModeFunc Mode>
 void nes_emu::cpu::instruction_rti()
 {
-	auto page = std::invoke(Mode, *this);
+	const auto page = std::invoke(Mode, *this);
 }
 
 template <nes_emu::cpu::AddressingModeFunc Mode>
 void nes_emu::cpu::instruction_rts()
 {
-	auto page = std::invoke(Mode, *this);
+	const auto page = std::invoke(Mode, *this);
 }
 
 template <nes_emu::cpu::AddressingModeFunc Mode>
 void nes_emu::cpu::instruction_sbc()
 {
-	auto page = std::invoke(Mode, *this);
+	const auto page = std::invoke(Mode, *this);
 }
 
 template <nes_emu::cpu::AddressingModeFunc Mode>
 void nes_emu::cpu::instruction_sec()
 {
-	auto page = std::invoke(Mode, *this);
+	const auto page = std::invoke(Mode, *this);
 }
 
 template <nes_emu::cpu::AddressingModeFunc Mode>
 void nes_emu::cpu::instruction_sed()
 {
-	auto page = std::invoke(Mode, *this);
+	const auto page = std::invoke(Mode, *this);
 }
 
 template <nes_emu::cpu::AddressingModeFunc Mode>
 void nes_emu::cpu::instruction_sei()
 {
-	auto page = std::invoke(Mode, *this);
+	const auto page = std::invoke(Mode, *this);
 }
 
 template <nes_emu::cpu::AddressingModeFunc Mode>
 void nes_emu::cpu::instruction_sta()
 {
-	auto page = std::invoke(Mode, *this);
+	const auto page = std::invoke(Mode, *this);
 }
 
 template <nes_emu::cpu::AddressingModeFunc Mode>
 void nes_emu::cpu::instruction_stx()
 {
-	auto page = std::invoke(Mode, *this);
+	const auto page = std::invoke(Mode, *this);
 }
 
 template <nes_emu::cpu::AddressingModeFunc Mode>
 void nes_emu::cpu::instruction_sty()
 {
-	auto page = std::invoke(Mode, *this);
+	const auto page = std::invoke(Mode, *this);
 }
 
 template <nes_emu::cpu::AddressingModeFunc Mode>
 void nes_emu::cpu::instruction_tax()
 {
-	auto page = std::invoke(Mode, *this);
+	const auto page = std::invoke(Mode, *this);
 }
 
 template <nes_emu::cpu::AddressingModeFunc Mode>
 void nes_emu::cpu::instruction_tay()
 {
-	auto page = std::invoke(Mode, *this);
+	const auto page = std::invoke(Mode, *this);
 }
 
 template <nes_emu::cpu::AddressingModeFunc Mode>
 void nes_emu::cpu::instruction_tsx()
 {
-	auto page = std::invoke(Mode, *this);
+	const auto page = std::invoke(Mode, *this);
 }
 
 template <nes_emu::cpu::AddressingModeFunc Mode>
 void nes_emu::cpu::instruction_txa()
 {
-	auto page = std::invoke(Mode, *this);
+	const auto page = std::invoke(Mode, *this);
 }
 
 template <nes_emu::cpu::AddressingModeFunc Mode>
 void nes_emu::cpu::instruction_txs()
 {
-	auto page = std::invoke(Mode, *this);
+	const auto page = std::invoke(Mode, *this);
 }
 
 template <nes_emu::cpu::AddressingModeFunc Mode>
 void nes_emu::cpu::instruction_tya()
 {
-	auto page = std::invoke(Mode, *this);
+	const auto page = std::invoke(Mode, *this);
 }
