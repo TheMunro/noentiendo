@@ -192,7 +192,9 @@ public:
 	template <AddressingModeFunc Mode, processor_status_register flag, bool is_set>
 	void branch();
 	template <AddressingModeFunc Mode>
-	void compare(std::uint8_t target_register);
+	void compare(std::uint8_t& target_register);
+	template <AddressingModeFunc Mode>
+	void load_register(std::uint8_t& target_register);
 	//I can only apologise here...
 	template<AddressingModeFunc Mode> void instruction_adc(); template<AddressingModeFunc Mode> void instruction_and(); template<AddressingModeFunc Mode> void instruction_asl(); template<AddressingModeFunc Mode> void instruction_bcc();
 	template<AddressingModeFunc Mode> void instruction_bcs(); template<AddressingModeFunc Mode> void instruction_beq(); template<AddressingModeFunc Mode> void instruction_bit(); template<AddressingModeFunc Mode> void instruction_bmi();

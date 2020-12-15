@@ -32,8 +32,8 @@ void nes_emu::cpu::instruction_asl()
 
 	const std::uint16_t result = static_cast<std::uint16_t>(fetched) << 1;
 
-	set_flag(processor_status_register::carry, (result & 0xFF00) != 0x00);
-	set_flag(processor_status_register::zero, (result & 0x00FF) == 0x00);
+	set_flag(processor_status_register::carry, (result & 0xFF00) != 0x0000);
+	set_flag(processor_status_register::zero, (result & 0xFF) == 0x00);
 	set_flag(processor_status_register::negative, result & 0x80);
 
 	if ((instructions[opcode].addressing_mode == &nes_emu::cpu::address_mode_implicit))
@@ -92,9 +92,9 @@ void nes_emu::cpu::instruction_bit()
 
 	const std::uint16_t result = register_accumulator & fetched;
 
-	set_flag(processor_status_register::zero, (result & 0x00FF) == 0x00);
-	set_flag(processor_status_register::overflow, fetched & (1 << 6));
-	set_flag(processor_status_register::negative, fetched & (1 << 7));
+	set_flag(processor_status_register::zero, (result & 0xFF) == 0x00);
+	set_flag(processor_status_register::overflow, fetched & 0x40);
+	set_flag(processor_status_register::negative, fetched & 0x80);
 }
 
 template <nes_emu::cpu::AddressingModeFunc Mode>
@@ -194,7 +194,7 @@ void nes_emu::cpu::instruction_clv()
 }
 
 template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::compare(std::uint8_t target_register)
+void nes_emu::cpu::compare(std::uint8_t& target_register)
 {
 	const auto page = std::invoke(Mode, *this);
 	
@@ -234,8 +234,8 @@ void nes_emu::cpu::instruction_dec()
 	const std::uint16_t result = fetched - 1;
 	write(address_absolute, result & 0x00FF);
 
-	set_flag(processor_status_register::zero, result == 0x0000);
-	set_flag(processor_status_register::negative, result & (1 << 7));
+	set_flag(processor_status_register::zero, result == 0x00);
+	set_flag(processor_status_register::negative, result & 0x80);
 }
 
 template <nes_emu::cpu::AddressingModeFunc Mode>
@@ -244,8 +244,8 @@ void nes_emu::cpu::instruction_dex()
 	auto page = std::invoke(Mode, *this);
 	--register_x;
 
-	set_flag(processor_status_register::zero, register_x == 0x0000);
-	set_flag(processor_status_register::negative, register_x & (1 << 7));
+	set_flag(processor_status_register::zero, register_x == 0x00);
+	set_flag(processor_status_register::negative, register_x & 0x80);
 }
 
 template <nes_emu::cpu::AddressingModeFunc Mode>
@@ -254,8 +254,8 @@ void nes_emu::cpu::instruction_dey()
 	auto page = std::invoke(Mode, *this);
 	--register_y;
 
-	set_flag(processor_status_register::zero, register_y == 0x0000);
-	set_flag(processor_status_register::negative, register_y & (1 << 7));
+	set_flag(processor_status_register::zero, register_y == 0x00);
+	set_flag(processor_status_register::negative, register_y & 0x80);
 }
 
 template <nes_emu::cpu::AddressingModeFunc Mode>
@@ -266,8 +266,8 @@ void nes_emu::cpu::instruction_eor()
 
 	register_accumulator ^= fetched;
 
-	set_flag(processor_status_register::zero, register_accumulator == 0x0000);
-	set_flag(processor_status_register::negative, register_accumulator & (1 << 7));
+	set_flag(processor_status_register::zero, register_accumulator == 0x00);
+	set_flag(processor_status_register::negative, register_accumulator & 0x80);
 }
 
 template <nes_emu::cpu::AddressingModeFunc Mode>
@@ -279,8 +279,8 @@ void nes_emu::cpu::instruction_inc()
 	const std::uint16_t result = fetched + 1;
 	write(address_absolute, result & 0x00FF);
 
-	set_flag(processor_status_register::zero, result == 0x0000);
-	set_flag(processor_status_register::negative, result & (1 << 7));
+	set_flag(processor_status_register::zero, result == 0x00);
+	set_flag(processor_status_register::negative, result & 0x80);
 }
 
 template <nes_emu::cpu::AddressingModeFunc Mode>
@@ -289,8 +289,8 @@ void nes_emu::cpu::instruction_inx()
 	auto page = std::invoke(Mode, *this);
 	++register_x;
 
-	set_flag(processor_status_register::zero, register_x == 0x0000);
-	set_flag(processor_status_register::negative, register_x & (1 << 7));
+	set_flag(processor_status_register::zero, register_x == 0x00);
+	set_flag(processor_status_register::negative, register_x & 0x80);
 }
 
 template <nes_emu::cpu::AddressingModeFunc Mode>
@@ -299,8 +299,8 @@ void nes_emu::cpu::instruction_iny()
 	auto page = std::invoke(Mode, *this);
 	++register_y;
 
-	set_flag(processor_status_register::zero, register_y == 0x0000);
-	set_flag(processor_status_register::negative, register_y & (1 << 7));
+	set_flag(processor_status_register::zero, register_y == 0x00);
+	set_flag(processor_status_register::negative, register_y & 0x80);
 }
 
 template <nes_emu::cpu::AddressingModeFunc Mode>
@@ -314,24 +314,66 @@ template <nes_emu::cpu::AddressingModeFunc Mode>
 void nes_emu::cpu::instruction_jsr()
 {
 	auto page = std::invoke(Mode, *this);
+
+	--register_program_counter;
+
+	write(stack_address_offset + register_stack_pointer, register_program_counter >> 8);
+	++register_stack_pointer;
+	write(stack_address_offset + register_stack_pointer, register_program_counter);
+	++register_stack_pointer;
+	
+	register_program_counter = address_absolute;
+}
+
+template <nes_emu::cpu::AddressingModeFunc Mode>
+void load_register(std::uint8_t& target_register)
+{
+	auto page = std::invoke(Mode, *this);
+
+	fetch<Mode>();
+
+	target_register = fetched;
+
+	set_flag(processor_status_register::zero, target_register == 0x00);
+	set_flag(processor_status_register::negative, target_register & 0x80);
 }
 
 template <nes_emu::cpu::AddressingModeFunc Mode>
 void nes_emu::cpu::instruction_lda()
 {
 	auto page = std::invoke(Mode, *this);
+
+	fetch<Mode>();
+
+	register_accumulator = fetched;
+
+	set_flag(processor_status_register::zero, register_accumulator == 0x00);
+	set_flag(processor_status_register::negative, register_accumulator & 0x80);
 }
 
 template <nes_emu::cpu::AddressingModeFunc Mode>
 void nes_emu::cpu::instruction_ldx()
 {
 	auto page = std::invoke(Mode, *this);
+	
+	fetch<Mode>();
+
+	register_x = fetched;
+
+	set_flag(processor_status_register::zero, register_x == 0x00);
+	set_flag(processor_status_register::negative, register_x & 0x80);
 }
 
 template <nes_emu::cpu::AddressingModeFunc Mode>
 void nes_emu::cpu::instruction_ldy()
 {
 	auto page = std::invoke(Mode, *this);
+	fetch<Mode>();
+
+	register_y = fetched;
+
+	set_flag(processor_status_register::zero, register_y == 0x00);
+	set_flag(processor_status_register::negative, register_y & 0x80);
 }
 
 template <nes_emu::cpu::AddressingModeFunc Mode>
