@@ -4,6 +4,7 @@
 cmake_minimum_required (VERSION 3.16)
 
 set(NES_EMU_INCLUDES
+	"inc/bitfield.hpp"
 	"inc/nes.hpp"
 	"inc/cpu.hpp"
 	"inc/bus.hpp"
