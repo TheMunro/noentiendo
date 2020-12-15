@@ -2,7 +2,6 @@
 
 //STDLIB
 #include <cstdint>
-#include <vector>
 #include <type_traits>
 
 //INTERNAL
@@ -90,22 +89,6 @@ private:
 	underlying_type flags;
 };
 
-//consider overloading |=, &= and ^= instead
-//void set_flag(const enum_class_type flag)
-//{
-//	flags |= static_cast<underlying_type>(flag);
-//}
-//
-//void clear_flag(const enum_class_type flag)
-//{
-//	flags &= ~static_cast<underlying_type>(flag);
-//}
-//
-//void toggle_flag(const enum_class_type flag)
-//{
-//	flags ^= static_cast<underlying_type>(flag);
-//}
-
 
 enum class opcode
 {
@@ -151,8 +134,8 @@ protected:
 	using AddressingModeFunc = bool(cpu::*)();
 
 public:
-	cpu(const bus& bus)
-		: bus{bus}
+	cpu(const bus& input_bus)
+		: bus{input_bus}
 		, instructions{build_instructions()}
 	{
 	}
@@ -257,7 +240,7 @@ private:
 template <nes_emu::cpu::AddressingModeFunc Mode>
 void nes_emu::cpu::fetch()
 {
-	if (!mode == &nes_emu::cpu::address_mode_implicit)
+	if (!Mode == &nes_emu::cpu::address_mode_implicit)
 		fetched = read(register_accumulator);
 }
 

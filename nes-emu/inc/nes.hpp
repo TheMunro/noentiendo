@@ -2,7 +2,6 @@
 
 //STDLIB
 #include <memory>
-#include <cstdint>
 
 #include "cpu.hpp"
 #include "bus.hpp"
