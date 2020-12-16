@@ -49,11 +49,10 @@ class cpu;
 class instruction
 {
 protected:
-	using ExecuteFunc = bool(cpu::*)();
+	using ExecuteFunc = void(cpu::*)();
 
 public:
 	opcode opcode;
-	bool complete = false;
 	uint8_t bytes = 0;
 	uint8_t cycles = 0;
 
