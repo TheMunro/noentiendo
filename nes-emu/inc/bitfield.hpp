@@ -19,7 +19,6 @@ public:
 	{
 	}
 
-	//can I constexpr all the things?
 	//https://en.cppreference.com/w/cpp/named_req/BitmaskType
     constexpr bitfield operator~() const noexcept
 	{
