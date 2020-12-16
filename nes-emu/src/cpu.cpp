@@ -147,49 +147,67 @@ constexpr std::array<nes_emu::instruction, 256> nes_emu::cpu::build_instructions
 	instructions[0x6C] = instruction{opcode::JMP, 3, 5, &cpu::instruction_jmp<&cpu::address_mode_indirect>};
 		
 	//3 of 4
-	//JSR
-	//instructions[0x??] = instruction{opcode::JSR, ?, ?, &cpu::instruction_jsr<&cpu::??>};
+	instructions[0x20] = instruction{opcode::JSR, 3, 6, &cpu::instruction_jsr<&cpu::address_mode_absolute>};
 
-	//LDA
-	//instructions[0x??] = instruction{opcode::LDA, ?, ?, &cpu::instruction_lda<&cpu::??>};
+	instructions[0xA9] = instruction{opcode::LDA, 2, 2, &cpu::instruction_lda<&cpu::address_mode_immediate>};
+	instructions[0xA5] = instruction{opcode::LDA, 2, 3, &cpu::instruction_lda<&cpu::address_mode_zero_page>};
+	instructions[0xB5] = instruction{opcode::LDA, 2, 4, &cpu::instruction_lda<&cpu::address_mode_zero_page_x>};
+	instructions[0xAD] = instruction{opcode::LDA, 3, 4, &cpu::instruction_lda<&cpu::address_mode_absolute>};
+	instructions[0xBD] = instruction{opcode::LDA, 3, 4, &cpu::instruction_lda<&cpu::address_mode_absolute_x>};
+	instructions[0xB9] = instruction{opcode::LDA, 3, 4, &cpu::instruction_lda<&cpu::address_mode_absolute_y>};
+	instructions[0xA1] = instruction{opcode::LDA, 2, 6, &cpu::instruction_lda<&cpu::address_mode_indexed_indirect>};
+	instructions[0xB1] = instruction{opcode::LDA, 2, 5, &cpu::instruction_lda<&cpu::address_mode_indirect_indexed>};
 
-	//LDX
-	//instructions[0x??] = instruction{opcode::LDX, ?, ?, &cpu::instruction_ldx<&cpu::??>};
+	instructions[0xA2] = instruction{opcode::LDX, 2, 2, &cpu::instruction_ldx<&cpu::address_mode_immediate>};
+	instructions[0xA6] = instruction{opcode::LDX, 2, 3, &cpu::instruction_ldx<&cpu::address_mode_zero_page>};
+	instructions[0xB6] = instruction{opcode::LDX, 2, 4, &cpu::instruction_ldx<&cpu::address_mode_zero_page_y>};
+	instructions[0xAE] = instruction{opcode::LDX, 3, 4, &cpu::instruction_ldx<&cpu::address_mode_absolute>};
+	instructions[0xBE] = instruction{opcode::LDX, 3, 4, &cpu::instruction_ldx<&cpu::address_mode_absolute_y>};
 
-	//LDY
-	//instructions[0x??] = instruction{opcode::LDY, ?, ?, &cpu::instruction_ldy<&cpu::??>};
+	instructions[0xA0] = instruction{opcode::LDY, 2, 2, &cpu::instruction_ldy<&cpu::address_mode_immediate>};
+	instructions[0xA4] = instruction{opcode::LDY, 2, 3, &cpu::instruction_ldy<&cpu::address_mode_zero_page>};
+	instructions[0xB4] = instruction{opcode::LDY, 2, 4, &cpu::instruction_ldy<&cpu::address_mode_zero_page_x>};
+	instructions[0xAC] = instruction{opcode::LDY, 3, 4, &cpu::instruction_ldy<&cpu::address_mode_absolute>};
+	instructions[0xBC] = instruction{opcode::LDY, 3, 4, &cpu::instruction_ldy<&cpu::address_mode_absolute_x>};
 
-	//LSR
-	//instructions[0x??] = instruction{opcode::LSR, ?, ?, &cpu::instruction_lsr<&cpu::??>};
+	instructions[0x4A] = instruction{opcode::LSR, 1, 2, &cpu::instruction_lsr<&cpu::address_mode_immediate>};
+	instructions[0x46] = instruction{opcode::LSR, 2, 5, &cpu::instruction_lsr<&cpu::address_mode_zero_page>};
+	instructions[0x56] = instruction{opcode::LSR, 2, 6, &cpu::instruction_lsr<&cpu::address_mode_zero_page_x>};
+	instructions[0x4E] = instruction{opcode::LSR, 3, 6, &cpu::instruction_lsr<&cpu::address_mode_absolute>};
+	instructions[0x5E] = instruction{opcode::LSR, 3, 7, &cpu::instruction_lsr<&cpu::address_mode_absolute_x>};
+	
+	instructions[0xEA] = instruction{opcode::NOP, 1, 2, &cpu::instruction_nop<&cpu::address_mode_implicit>};
 
-	//NOP
-	//instructions[0x??] = instruction{opcode::NOP, ?, ?, &cpu::instruction_nop<&cpu::??>};
+	instructions[0x09] = instruction{opcode::ORA, 2, 2, &cpu::instruction_ora<&cpu::address_mode_immediate>};
+	instructions[0x05] = instruction{opcode::ORA, 2, 3, &cpu::instruction_ora<&cpu::address_mode_zero_page>};
+	instructions[0x15] = instruction{opcode::ORA, 2, 4, &cpu::instruction_ora<&cpu::address_mode_zero_page_x>};
+	instructions[0x0D] = instruction{opcode::ORA, 3, 4, &cpu::instruction_ora<&cpu::address_mode_absolute>};
+	instructions[0x1D] = instruction{opcode::ORA, 3, 4, &cpu::instruction_ora<&cpu::address_mode_absolute_x>};
+	instructions[0x19] = instruction{opcode::ORA, 3, 4, &cpu::instruction_ora<&cpu::address_mode_absolute_y>};
+	instructions[0x01] = instruction{opcode::ORA, 2, 6, &cpu::instruction_ora<&cpu::address_mode_indexed_indirect>};
+	instructions[0x11] = instruction{opcode::ORA, 2, 5, &cpu::instruction_ora<&cpu::address_mode_indirect_indexed>};
 
-	//ORA
-	//instructions[0x??] = instruction{opcode::ORA, ?, ?, &cpu::instruction_ora<&cpu::??>};
+	instructions[0x48] = instruction{opcode::PHA, 1, 3, &cpu::instruction_pha<&cpu::address_mode_implicit>};
 
-	//PHA
-	//instructions[0x??] = instruction{opcode::PHA, ?, ?, &cpu::instruction_pha<&cpu::??>};
+	instructions[0x08] = instruction{opcode::PHP, 1, 3, &cpu::instruction_php<&cpu::address_mode_implicit>};
 
-	//PHP
-	//instructions[0x??] = instruction{opcode::PHP, ?, ?, &cpu::instruction_php<&cpu::??>};
+	instructions[0x68] = instruction{opcode::PLA, 1, 4, &cpu::instruction_pla<&cpu::address_mode_implicit>};
 
-	//PLA
-	//instructions[0x??] = instruction{opcode::PLA, ?, ?, &cpu::instruction_pla<&cpu::??>};
+	instructions[0x28] = instruction{opcode::PLP, 1, 4, &cpu::instruction_plp<&cpu::address_mode_implicit>};
 
-	//PLP
-	//instructions[0x??] = instruction{opcode::PLP, ?, ?, &cpu::instruction_plp<&cpu::??>};
+	instructions[0x2A] = instruction{opcode::ROL, 1, 2, &cpu::instruction_rol<&cpu::address_mode_accumulator>};
+	instructions[0x26] = instruction{opcode::ROL, 2, 5, &cpu::instruction_rol<&cpu::address_mode_zero_page>};
+	instructions[0x36] = instruction{opcode::ROL, 2, 6, &cpu::instruction_rol<&cpu::address_mode_zero_page_x>};
+	instructions[0x2E] = instruction{opcode::ROL, 3, 6, &cpu::instruction_rol<&cpu::address_mode_absolute>};
+	instructions[0x3E] = instruction{opcode::ROL, 3, 7, &cpu::instruction_rol<&cpu::address_mode_absolute_x>};
 
-	//ROL
-	//instructions[0x??] = instruction{opcode::ROL, ?, ?, &cpu::instruction_rol<&cpu::??>};
+	instructions[0x6A] = instruction{opcode::ROR, 1, 2, &cpu::instruction_ror<&cpu::address_mode_accumulator>};
+	instructions[0x66] = instruction{opcode::ROR, 2, 5, &cpu::instruction_ror<&cpu::address_mode_zero_page>};
+	instructions[0x76] = instruction{opcode::ROR, 2, 6, &cpu::instruction_ror<&cpu::address_mode_zero_page_x>};
+	instructions[0x6E] = instruction{opcode::ROR, 3, 6, &cpu::instruction_ror<&cpu::address_mode_absolute>};
+	instructions[0x7E] = instruction{opcode::ROR, 3, 7, &cpu::instruction_ror<&cpu::address_mode_absolute_x>};
 
-	//ROR
-	//instructions[0x??] = instruction{opcode::ROR, ?, ?, &cpu::instruction_ror<&cpu::??>};
-
-	//RTI
-	//instructions[0x??] = instruction{opcode::RTI, ?, ?, &cpu::instruction_rti<&cpu::??>};
-
-
+	instructions[0x40] = instruction{opcode::RTI, 1, 6, &cpu::instruction_rti<&cpu::address_mode_implicit>};
 	
 	//4 of 4
 	//RTS
