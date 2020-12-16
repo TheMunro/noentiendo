@@ -8,13 +8,19 @@ set(NES_EMU_INCLUDES
 	"inc/nes.hpp"
 	"inc/cpu.hpp"
 	"inc/bus.hpp"
+	"inc/cartridge.hpp"
 	"inc/instructions.hpp"
+	"inc/mapper.hpp"
+	"inc/mapper_000.hpp"
 )
 
 set(NES_EMU_SOURCES
 
 	"src/cpu.cpp"
 	"src/bus.cpp"
+	"src/cartridge.cpp"
+	"src/mapper.cpp"
+	"src/mapper_000.cpp"
 
 	"src/main.cpp"
 )
