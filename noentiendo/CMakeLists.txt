@@ -1,6 +1,6 @@
 ﻿cmake_minimum_required (VERSION 3.16)
 
-set(NES_EMU_INCLUDES
+set(noentiendo_INCLUDES
 	"inc/bitfield.hpp"
 	"inc/nes.hpp"
 	"inc/cpu.hpp"
@@ -11,7 +11,7 @@ set(NES_EMU_INCLUDES
 	"inc/mapper_000.hpp"
 )
 
-set(NES_EMU_SOURCES
+set(noentiendo_SOURCES
 
 	"src/cpu.cpp"
 	"src/bus.cpp"
@@ -21,9 +21,9 @@ set(NES_EMU_SOURCES
 )
 
 # Add source to this project's executable.
-add_library (nes-emu ${NES_EMU_INCLUDES} ${NES_EMU_SOURCES})
+add_library (noentiendo ${noentiendo_INCLUDES} ${noentiendo_SOURCES})
 
-set_property(TARGET nes-emu PROPERTY CXX_STANDARD 17)
+set_property(TARGET noentiendo PROPERTY CXX_STANDARD 17)
 
 target_include_directories(${CMAKE_PROJECT_NAME}
     PUBLIC

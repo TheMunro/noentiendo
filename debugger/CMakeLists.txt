@@ -43,13 +43,13 @@ set(DEBUGGER_INCLUDES
     "inc/debugger.hpp"
 )
 
-set(NES_EMU_SOURCES
+set(DEBUGGER_SOURCES
     "src/debugger.cpp"
 	"src/main.cpp"
 )
 
 # Add source to this project's executable.
-add_executable (debugger ${NES_EMU_INCLUDES} ${NES_EMU_SOURCES})
+add_executable (debugger ${DEBUGGER_INCLUDES} ${DEBUGGER_SOURCES})
 target_link_libraries(debugger nes-emu imgui)
 
 if (WIN32)
