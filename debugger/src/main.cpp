@@ -1,6 +1,7 @@
-﻿#include <iostream>
+﻿#include "debugger.hpp"
 
-int main()
+int main(int, char**)
  {
-	std::cout << "hello mario" << '\n';
-}
+	debugger debugger;
+	return debugger.run();
+ }

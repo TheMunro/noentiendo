@@ -24,7 +24,16 @@ public:
 		//ship to distributor
 		//ship to retail outlet
 		//sell to consumer
-		return std::make_unique<nes>(cpu, bus);
+		struct built_nes : nes
+		{
+			//https://seanmiddleditch.com/enabling-make-unique-with-private-constructors/
+			built_nes(std::unique_ptr<nes_emu::cpu> _cpu, std::unique_ptr<nes_emu::bus> _bus)
+				: nes{std::move(_cpu), std::move(_bus)}
+			{
+			}
+		};
+		
+		return std::make_unique<built_nes>(std::move(cpu), std::move(bus));
 	}
 
 private:
@@ -33,7 +42,7 @@ private:
 		, bus{std::move(_bus)}
 	{
 	}
-	
+
 	std::unique_ptr<cpu> cpu;
 	std::unique_ptr<bus> bus;
 };

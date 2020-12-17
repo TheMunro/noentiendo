@@ -49,3 +49,13 @@ if (NOT catch2_POPULATED)
     add_subdirectory("${catch2_SOURCE_DIR}" "${catch2_BINARY_DIR}" EXCLUDE_FROM_ALL)
 endif ()
 message(STATUS "Fetched Catch2")
+
+message(STATUS "Fetching sdl2-cmake-modules...")
+FetchContent_Declare(sdl2_cmake_modules
+    GIT_REPOSITORY https://github.com/aminosbh/sdl2-cmake-modules
+    GIT_SHALLOW    TRUE
+)
+if (NOT sdl2_cmake_modules_POPULATED)
+    FetchContent_Populate(sdl2_cmake_modules)
+endif()
+message(STATUS "Fetched sdl2-cmake-modules")

@@ -145,7 +145,7 @@ public:
 	}
 
 private:
-	[[nodiscard]] static constexpr std::array<instruction, 256> build_instructions();
+	[[nodiscard]] constexpr std::array<instruction, 256> build_instructions() const;
 	
 	const bus& bus;
 	const std::array<instruction, 256> instructions;

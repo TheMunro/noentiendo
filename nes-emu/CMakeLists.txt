@@ -23,8 +23,7 @@ set(NES_EMU_SOURCES
 # Add source to this project's executable.
 add_library (nes-emu ${NES_EMU_INCLUDES} ${NES_EMU_SOURCES})
 
-set_property(TARGET nes-emu 
-	PROPERTY CXX_STANDARD 17)
+set_property(TARGET nes-emu PROPERTY CXX_STANDARD 17)
 
 target_include_directories(${CMAKE_PROJECT_NAME}
     PUBLIC

@@ -40,7 +40,7 @@ void nes_emu::cpu::non_maskable_interrupt()
 {
 }
 
-constexpr std::array<nes_emu::instruction, 256> nes_emu::cpu::build_instructions()
+constexpr std::array<nes_emu::instruction, 256> nes_emu::cpu::build_instructions() const
 {
 	std::array<instruction, 256> instructions{};
 
