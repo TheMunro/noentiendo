@@ -20,6 +20,7 @@ if (NOT imgui_POPULATED)
         "${imgui_SOURCE_DIR}/imgui_widgets.cpp"
         "${imgui_SOURCE_DIR}/imgui_demo.cpp")
 
+    target_include_directories(imgui SYSTEM PUBLIC "${imgui_SOURCE_DIR}")
     set_target_properties(imgui PROPERTIES FOLDER dependencies) 
     set_target_properties(imgui PROPERTIES LINKER_LANGUAGE CXX)
 
