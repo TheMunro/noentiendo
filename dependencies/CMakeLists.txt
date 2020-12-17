@@ -1,7 +1,9 @@
 include(FetchContent)
 
+set(FETCHCONTENT_BASE_DIR "${CMAKE_CURRENT_BINARY_DIR}")
+
 # fmt
-message(STATUS "Fetching fmt")
+message(STATUS "Fetching fmt...")
 FetchContent_Declare(fmt
     GIT_REPOSITORY https://github.com/fmtlib/fmt
     GIT_TAG        7.1.3
@@ -16,10 +18,11 @@ if (NOT fmt_POPULATED)
     FetchContent_Populate(fmt)
     add_subdirectory("${fmt_SOURCE_DIR}" "${fmt_BINARY_DIR}" EXCLUDE_FROM_ALL)
 endif ()
+message(STATUS "Fetched fmt")
 
 
 # spdlog
-message(STATUS "Fetching spdlog")
+message(STATUS "Fetching spdlog...")
 FetchContent_Declare(spdlog
     GIT_REPOSITORY https://github.com/gabime/spdlog
     GIT_TAG        v1.8.2
@@ -30,10 +33,11 @@ if (NOT spdlog_POPULATED)
     FetchContent_Populate(spdlog)
     add_subdirectory("${spdlog_SOURCE_DIR}" "${spdlog_BINARY_DIR}" EXCLUDE_FROM_ALL)
 endif ()
+message(STATUS "Fetched spdlog")
 
 
 # catch2
-message(STATUS "Fetching Catch2")
+message(STATUS "Fetching Catch2...")
 FetchContent_Declare(catch2
     GIT_REPOSITORY https://github.com/catchorg/Catch2
     GIT_TAG        v2.13.3
@@ -41,6 +45,7 @@ FetchContent_Declare(catch2
 )
 FetchContent_GetProperties(catch2)
 if (NOT catch2_POPULATED)
-    FetchContent_Populate(catch2)
+    FetchContent_Populate(catch2) 
     add_subdirectory("${catch2_SOURCE_DIR}" "${catch2_BINARY_DIR}" EXCLUDE_FROM_ALL)
 endif ()
+message(STATUS "Fetched Catch2")
