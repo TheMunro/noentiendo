@@ -66,11 +66,7 @@ protected:
 	using AddressingModeFunc = bool(cpu::*)();
 
 public:
-	cpu(const bus& input_bus)
-		: bus{input_bus}
-		, instructions{build_instructions()}
-	{
-	}
+	explicit cpu(const bus& input_bus);
 
 	//inputs
 	void clock();
@@ -166,14 +162,16 @@ private:
 	std::uint8_t cycles_remaining = 0;          //remaining cycles for current instruction
 	std::uint32_t clock_count = 0;              //clock count accumulator
 
-	std::uint16_t stack_address_offset = 0x0100;
+	static constexpr std::uint16_t stack_address_offset = 0x0100;
 };
 
 template <nes_emu::cpu::AddressingModeFunc Mode>
 void nes_emu::cpu::fetch()
 {
-	if (!Mode == &nes_emu::cpu::address_mode_implicit)
-		fetched = read(register_accumulator);
+	if (Mode != &nes_emu::cpu::address_mode_implicit)
+		fetched = read(address_absolute);
 }
 
 }	 // namespace nes_emu
+
+#include "instructions.hpp"

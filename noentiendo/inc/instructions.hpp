@@ -1,5 +1,4 @@
 #pragma once
-#include "cpu.hpp"
 
 template <nes_emu::cpu::AddressingModeFunc Mode>
 void nes_emu::cpu::instruction_adc()

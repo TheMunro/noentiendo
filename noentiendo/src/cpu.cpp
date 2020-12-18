@@ -1,6 +1,12 @@
 //INTERNAL
 #include "cpu.hpp"
 
+nes_emu::cpu::cpu(const nes_emu::bus& input_bus)
+	: bus{input_bus}
+	, instructions{build_instructions()}
+{
+}
+
 std::uint8_t nes_emu::cpu::read(const std::uint16_t address, bool read_only) const
 {
 	return bus.read(address, read_only);

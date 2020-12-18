@@ -25,7 +25,7 @@ add_library (noentiendo ${noentiendo_INCLUDES} ${noentiendo_SOURCES})
 
 set_property(TARGET noentiendo PROPERTY CXX_STANDARD 17)
 
-target_include_directories(${CMAKE_PROJECT_NAME}
+target_include_directories(noentiendo
     PUBLIC
         "${CMAKE_CURRENT_SOURCE_DIR}/inc"
     PRIVATE

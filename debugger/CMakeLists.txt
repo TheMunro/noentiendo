@@ -21,7 +21,7 @@ set(FETCHCONTENT_BASE_DIR "${CMAKE_CURRENT_BINARY_DIR}")
 message(STATUS "Fetching IMGUI...")
 FetchContent_Declare(imgui
     GIT_REPOSITORY https://github.com/ocornut/imgui
-    GIT_TAG        v1.79
+    GIT_TAG        master
     GIT_SHALLOW    TRUE
 )
 FetchContent_GetProperties(imgui)
@@ -32,9 +32,17 @@ if (NOT imgui_POPULATED)
         "${imgui_SOURCE_DIR}/imgui.cpp"
         "${imgui_SOURCE_DIR}/imgui_draw.cpp"
         "${imgui_SOURCE_DIR}/imgui_widgets.cpp"
-        "${imgui_SOURCE_DIR}/imgui_demo.cpp")
+        "${imgui_SOURCE_DIR}/imgui_tables.cpp"
+        "${imgui_SOURCE_DIR}/imgui_demo.cpp"
+        "${imgui_SOURCE_DIR}/backends/imgui_impl_sdl.cpp"
+        "${imgui_SOURCE_DIR}/backends/imgui_impl_vulkan.cpp"
+    )
 
-    target_include_directories(imgui SYSTEM PUBLIC "${imgui_SOURCE_DIR}")
+    target_include_directories(imgui SYSTEM PUBLIC "${imgui_SOURCE_DIR}/")
+    target_include_directories(imgui SYSTEM PUBLIC "${imgui_SOURCE_DIR}/../")
+    target_include_directories(imgui SYSTEM PUBLIC "${imgui_SOURCE_DIR}/../backends/")
+    set_target_properties(imgui PROPERTIES FOLDER dependencies)
+    target_link_libraries(imgui SDL2::Main Vulkan::Vulkan)
 endif ()
 
 message(STATUS "Fetched IMGUI")
@@ -48,9 +56,9 @@ set(DEBUGGER_SOURCES
 	"src/main.cpp"
 )
 
-# Add source to this project's executable.
 add_executable (debugger ${DEBUGGER_INCLUDES} ${DEBUGGER_SOURCES})
-target_link_libraries(debugger nes-emu imgui)
+target_link_libraries(debugger noentiendo imgui SDL2::Main Vulkan::Vulkan)
+set_property(TARGET debugger PROPERTY CXX_STANDARD 17)
 
 if (WIN32)
     add_custom_target(sdl2_copy
@@ -58,6 +66,7 @@ if (WIN32)
                 "${SDL2_LIBRARY}/../SDL2.dll"
                 "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/SDL2.dll"
     )
+    set_target_properties(sdl2_copy PROPERTIES FOLDER dependencies)
     add_dependencies(debugger sdl2_copy)
 endif()
 
@@ -65,12 +74,10 @@ if(WIN32)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
 endif()
 
-set_property(TARGET debugger 
-	PROPERTY CXX_STANDARD 17)
-
-target_include_directories(${CMAKE_PROJECT_NAME}
+target_include_directories(debugger
     PUBLIC
         "${CMAKE_CURRENT_SOURCE_DIR}/inc"
     PRIVATE
         "${CMAKE_CURRENT_SOURCE_DIR}/src"
 )
+

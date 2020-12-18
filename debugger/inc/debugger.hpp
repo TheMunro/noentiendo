@@ -1,4 +1,6 @@
-﻿#include "nes.hpp"
+﻿#pragma once
+
+#include "nes.hpp"
 
 class debugger
 {
