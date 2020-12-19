@@ -49,15 +49,21 @@ message(STATUS "Fetched IMGUI")
 
 set(DEBUGGER_INCLUDES
     "inc/debugger.hpp"
+    "inc/gui.hpp"
+    "inc/renderer.hpp"
+    "inc/window.hpp"
 )
 
 set(DEBUGGER_SOURCES
     "src/debugger.cpp"
+    "src/gui.cpp"
+    "src/renderer.cpp"
+    "src/window.cpp"
 	"src/main.cpp"
 )
 
 add_executable (debugger ${DEBUGGER_INCLUDES} ${DEBUGGER_SOURCES})
-target_link_libraries(debugger noentiendo imgui SDL2::Main Vulkan::Vulkan)
+target_link_libraries(debugger noentiendo imgui SDL2::Main Vulkan::Vulkan fmt::fmt-header-only spdlog::spdlog_header_only)
 set_property(TARGET debugger PROPERTY CXX_STANDARD 17)
 
 if (WIN32)
