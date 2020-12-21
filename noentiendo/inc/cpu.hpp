@@ -115,7 +115,7 @@ public:
 	[[nodiscard]] std::uint8_t get_cycles_remaining() const { return cycles_remaining; }
 	[[nodiscard]] std::uint32_t get_clock_count() const { return clock_count; }
 
-	[[nodiscard]] std::vector<std::string> get_current_execution_window() const;
+	[[nodiscard]] std::vector<std::string> disassemble() const;
 
 private:
 	[[nodiscard]] std::string instruction_to_string(const uint16_t current, uint16_t& next) const;

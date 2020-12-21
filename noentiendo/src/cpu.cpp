@@ -148,7 +148,7 @@ constexpr std::array<noentiendo::instruction, 256> noentiendo::cpu::build_instru
 	std::array<instruction, 256> instructions{};
 
     for (auto i = 0; i < 256; ++i)
-		instructions[i] = instruction{opcode::XXX, 0, 0, addressing_mode ::IMPLICIT, &cpu::instruction_xxx};
+		instructions[i] = instruction{opcode::XXX, 1, 0, addressing_mode ::IMPLICIT, &cpu::instruction_xxx};
 
 	//1 of 4
 	instructions[0x69] = instruction{opcode::ADC, 2, 2, addressing_mode::IMMEDIATE, &cpu::instruction_adc<&cpu::address_mode_immediate>};
@@ -586,7 +586,7 @@ bool noentiendo::cpu::address_mode_indirect_indexed()
 	
 	return false;
 }
-std::vector<std::string> noentiendo::cpu::get_current_execution_window() const
+std::vector<std::string> noentiendo::cpu::disassemble() const
 {
 	std::vector<std::string> result;
 	result.reserve(21);
@@ -606,11 +606,15 @@ std::vector<std::string> noentiendo::cpu::get_current_execution_window() const
 		current = previous;
 		--prev_count;
 	}
-
+	
+	while (prev_count-- > 0)
+		result.emplace_back("$????:XXX");
+	
 	while (current < initial)
 		result.emplace_back(instruction_to_string(current, current));
 	
 	result.emplace_back(instruction_to_string(initial, current));
+	const auto after_initial = current;
 
 	auto next_count = 10;
 	while (next_count > 0)
@@ -624,9 +628,12 @@ std::vector<std::string> noentiendo::cpu::get_current_execution_window() const
 	}
 	
 	const auto next = current;
-	current = initial + 1;
+	current = after_initial;
 	while (current < next)
 		result.emplace_back(instruction_to_string(current, current));
+	
+	while (next_count-- > 0)
+		result.emplace_back("$????:XXX");
 
 	return result;
 }
@@ -740,7 +747,7 @@ std::string noentiendo::cpu::instruction_to_string(uint16_t current, uint16_t& n
 	return instruction;
 }
 
-bool noentiendo::cpu::find_previous_instruction(uint16_t current, uint16_t& previous) const
+bool noentiendo::cpu::find_previous_instruction(const uint16_t current, uint16_t& previous) const
 {
 	auto check_instruction = [&current, &previous, *this](auto distance) {
 
@@ -749,40 +756,36 @@ bool noentiendo::cpu::find_previous_instruction(uint16_t current, uint16_t& prev
 			return false;
 		}
 
-		--current;
+		auto offset = current - distance;
 		
-		const auto opcode = bus.read(current, true);
-		if (instructions[opcode].bytes == distance || static_cast<noentiendo::opcode>(opcode) == opcode::XXX)
+		const auto opcode = bus.read(offset, true);
+		if (instructions[opcode].bytes == distance)
 		{
-			previous = current;
+			previous = offset;
 			return true;
 		}
 		
 		return false;
 	};
 	
-	 return check_instruction(1) || check_instruction(2) || check_instruction(3);
+	 return check_instruction(3) || check_instruction(2) || check_instruction(1);
 }
 
-bool noentiendo::cpu::find_next_instruction(uint16_t current, uint16_t& next) const
+bool noentiendo::cpu::find_next_instruction(const uint16_t current, uint16_t& next) const
 {
-	auto check_instruction = [&current, &next, *this](auto distance) {
+	auto check_instruction = [&current, &next, *this]() {
 		if (current == 0x0000 || current == 0xFFFF)
 		{
 			return false;
 		}
 
-		++current;
-		
 		const auto opcode = bus.read(current, true);
-		if (instructions[opcode].bytes == distance || static_cast<noentiendo::opcode>(opcode) == opcode::XXX)
-		{
-			next = current;
-			return true;
-		}
-
-		return false;
+		if (static_cast<noentiendo::opcode>(opcode) == opcode::XXX)
+			return false;
+		
+		next = current + instructions[opcode].bytes;
+		return true;
 	};
 
-	return check_instruction(1) || check_instruction(2) || check_instruction(3);
+	return check_instruction();
 }

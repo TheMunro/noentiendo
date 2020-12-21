@@ -43,7 +43,7 @@ public:
 	[[nodiscard]] bus* get_bus() const { return bus.get(); }
 	[[nodiscard]] bool is_active() const { return active; }
 	//[[nodiscard]] const std::map<uint16_t, std::string>& get_disassembled_bytecode() const { return disassembled_bytecode; }
-	[[nodiscard]] std::vector<std::string> disassemble() const { return cpu->get_current_execution_window(); }
+	[[nodiscard]] std::vector<std::string> disassemble() const { return cpu->disassemble(); }
 
 	//TODO: Remove this hacky hack!
 	void insert_cartridge()
