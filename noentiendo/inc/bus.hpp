@@ -7,7 +7,7 @@
 
 namespace nes_emu
 {
-constexpr std::int32_t address_ram_size = 0xFFFF;
+constexpr std::int32_t address_ram_size = 0xFFFF + 1;
 
 class bus
 {
@@ -19,6 +19,9 @@ public:
 	
 	[[nodiscard]] std::uint8_t read(std::uint16_t address, bool read_only = false) const;
 	void write(std::uint16_t address, std::uint8_t data) const;
+
+	[[nodiscard]] std::array<std::uint8_t, address_ram_size>* get_ram() const { return ram.get(); }
+	//void insert_cartridge(std::unique_ptr<cartridge> game) { cartridge = std::move(game); }
 
 private:
 	//hmm... this should possibly be another peripheral in the nes class

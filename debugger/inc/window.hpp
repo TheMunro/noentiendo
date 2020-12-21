@@ -11,7 +11,7 @@ namespace debugger
 class window
 {
 public:
-	window(std::string name);
+	explicit window(std::string name, int width = 1280, int height = 720);
 	~window();
 	
 	window(const window&) = delete;

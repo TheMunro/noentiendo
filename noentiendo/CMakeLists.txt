@@ -22,6 +22,7 @@ set(noentiendo_SOURCES
 
 # Add source to this project's executable.
 add_library (noentiendo ${noentiendo_INCLUDES} ${noentiendo_SOURCES})
+target_link_libraries(noentiendo fmt::fmt-header-only spdlog::spdlog_header_only)
 
 set_property(TARGET noentiendo PROPERTY CXX_STANDARD 17)
 

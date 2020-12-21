@@ -49,14 +49,15 @@ message(STATUS "Fetched IMGUI")
 
 set(DEBUGGER_INCLUDES
     "inc/debugger.hpp"
-    "inc/gui.hpp"
+    "inc/input.hpp"
     "inc/renderer.hpp"
     "inc/window.hpp"
+    "inc/memory_editor.hpp"
 )
 
 set(DEBUGGER_SOURCES
     "src/debugger.cpp"
-    "src/gui.cpp"
+    "src/input.cpp"
     "src/renderer.cpp"
     "src/window.cpp"
 	"src/main.cpp"

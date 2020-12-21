@@ -1,5 +1,6 @@
 #include "input.hpp"
 #include "window.hpp"
+#include "fmt/format.h"
 
 #include <imgui.h>
 #include <SDL_events.h>
@@ -8,25 +9,17 @@
 debugger::input::input(debugger::window& window)
 	: window{window}
 {
-	// Setup Dear ImGui context
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
 	auto& io = ImGui::GetIO();
 	(void)io;
 	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
 	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 
-	// Setup Dear ImGui style
-	ImGui::StyleColorsDark();
-	//ImGui::StyleColorsClassic();
-	
 	ImGui_ImplSDL2_InitForVulkan(window.get_handle());
 }
 
 debugger::input::~input()
 {
 	ImGui_ImplSDL2_Shutdown();
-	ImGui::DestroyContext();
 }
 
 void debugger::input::update()

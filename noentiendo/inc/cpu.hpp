@@ -2,6 +2,8 @@
 
 //STDLIB
 #include <cstdint>
+#include <vector>
+#include <string>
 
 //INTERNAL
 #include "bus.hpp"
@@ -43,6 +45,22 @@ enum class opcode
 	TSX, TXA, TXS, TYA,
 };
 
+enum class addressing_mode
+{
+	IMPLICIT,
+	ACCUMULATOR,
+	IMMEDIATE,
+	ZERO_PAGE,
+	ZERO_PAGE_X,
+	ZERO_PAGE_Y,
+	RELATIVE,
+	ABSOLUTE,
+	ABSOLUTE_X,
+	ABSOLUTE_Y,
+	INDIRECT,
+	INDEXED_INDIRECT,
+	INDIRECT_INDEXED
+};
 
 class cpu;
 
@@ -55,6 +73,7 @@ public:
 	opcode opcode;
 	uint8_t bytes = 0;
 	uint8_t cycles = 0;
+	addressing_mode addressing_mode; 
 
 	ExecuteFunc execute;
 };
@@ -71,8 +90,8 @@ public:
 	//inputs
 	void clock();
 	void reset();
-	void interrupt();
-	void non_maskable_interrupt();
+	void irq();
+	void nmi();
 
 	//data
 	template <nes_emu::cpu::AddressingModeFunc Mode>
@@ -80,6 +99,29 @@ public:
 	[[nodiscard]] std::uint8_t read(std::uint16_t address, bool read_only = false) const;
 	void write(std::uint16_t address, std::uint8_t data) const;
 
+	//debugger use
+	[[nodiscard]] std::uint8_t get_register_accumulator() const { return register_accumulator; }
+	[[nodiscard]] std::uint8_t get_register_x() const { return register_x; }
+	[[nodiscard]] std::uint8_t get_register_y() const { return register_y; }
+	[[nodiscard]] std::uint8_t get_register_stack_pointer() const { return register_stack_pointer; }
+	[[nodiscard]] std::uint16_t get_register_program_counter() const { return register_program_counter; }
+	[[nodiscard]] bitfield<processor_status_register> get_register_status() const { return register_status; }
+
+	[[nodiscard]] std::uint8_t get_fetched() const { return fetched; }
+	[[nodiscard]] std::uint16_t get_address_absolute() const { return address_absolute; }
+	[[nodiscard]] std::uint16_t get_address_relative() const { return address_relative; }
+	[[nodiscard]] std::uint8_t get_opcode() const { return opcode; }
+	[[nodiscard]] std::uint8_t get_cycles_remaining() const { return cycles_remaining; }
+	[[nodiscard]] std::uint32_t get_clock_count() const { return clock_count; }
+
+	[[nodiscard]] std::vector<std::string> get_current_execution_window() const;
+
+private:
+	[[nodiscard]] std::string instruction_to_string(const uint16_t current, uint16_t& next) const;
+	[[nodiscard]] bool find_previous_instruction(const uint16_t current, uint16_t& previous) const;
+	[[nodiscard]] bool find_next_instruction(const uint16_t current, uint16_t& next) const;
+
+private:
 	//addressing
 	//http://www.emulator101.com/6502-addressing-modes.html
 	[[nodiscard]] bool address_mode_implicit();
@@ -127,7 +169,7 @@ public:
 	{
 		return (register_status & flag).value() == flag;
 	}
-	
+
 	void set_flag(const processor_status_register flag, const std::uint8_t value)
 	{
 		if (value)
