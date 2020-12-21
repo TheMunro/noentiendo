@@ -2,11 +2,11 @@
 
 //STDLIB
 
-namespace nes_emu
+namespace noentiendo
 {
 class cartridge
 {
 public:
 	cartridge() = default;
 };
-}	 // namespace nes_emu
+}	 // namespace noentiendo

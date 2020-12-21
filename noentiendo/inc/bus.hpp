@@ -5,7 +5,7 @@
 #include <memory>
 #include <cstdint>
 
-namespace nes_emu
+namespace noentiendo
 {
 constexpr std::int32_t address_ram_size = 0xFFFF + 1;
 

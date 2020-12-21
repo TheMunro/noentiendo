@@ -9,7 +9,7 @@
 #include "bus.hpp"
 #include "bitfield.hpp"
 
-namespace nes_emu
+namespace noentiendo
 {
 enum class processor_status_register : std::uint8_t
 {
@@ -43,6 +43,7 @@ enum class opcode
 	SEC, SED, SEI, STA,
 	STX, STY, TAX, TAY,
 	TSX, TXA, TXS, TYA,
+	XXX
 };
 
 enum class addressing_mode
@@ -94,7 +95,7 @@ public:
 	void nmi();
 
 	//data
-	template <nes_emu::cpu::AddressingModeFunc Mode>
+	template <noentiendo::cpu::AddressingModeFunc Mode>
 	void fetch();
 	[[nodiscard]] std::uint8_t read(std::uint16_t address, bool read_only = false) const;
 	void write(std::uint16_t address, std::uint8_t data) const;
@@ -164,6 +165,8 @@ private:
 	template<AddressingModeFunc Mode> void instruction_stx(); template<AddressingModeFunc Mode> void instruction_sty(); template<AddressingModeFunc Mode> void instruction_tax(); template<AddressingModeFunc Mode> void instruction_tay();
 	template<AddressingModeFunc Mode> void instruction_tsx(); template<AddressingModeFunc Mode> void instruction_txa(); template<AddressingModeFunc Mode> void instruction_txs(); template<AddressingModeFunc Mode> void instruction_tya();
 
+	void instruction_xxx(){}
+	
 	//flags
 	[[nodiscard]] bool get_flag(const processor_status_register flag) const
 	{
@@ -207,13 +210,13 @@ private:
 	static constexpr std::uint16_t stack_address_offset = 0x0100;
 };
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::fetch()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::fetch()
 {
-	if (Mode != &nes_emu::cpu::address_mode_implicit)
+	if (Mode != &noentiendo::cpu::address_mode_implicit)
 		fetched = read(address_absolute);
 }
 
-}	 // namespace nes_emu
+}	 // namespace noentiendo
 
 #include "instructions.hpp"

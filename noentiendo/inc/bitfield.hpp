@@ -1,6 +1,6 @@
 #pragma once
 
-namespace nes_emu
+namespace noentiendo
 {
 template<typename enum_class_type>
 class bitfield
@@ -67,4 +67,4 @@ public:
 private:
 	underlying_type flags;
 };
-}	 // namespace nes_emu
+}	 // namespace noentiendo

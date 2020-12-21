@@ -9,7 +9,7 @@
 #include "bus.hpp"
 #include "cartridge.hpp"
 
-namespace nes_emu
+namespace noentiendo
 {
 class nes
 {
@@ -17,10 +17,10 @@ public:
 	[[nodiscard]] static std::unique_ptr<nes> build()
 	{
 		//populate motherboard
-		auto bus = std::make_unique<nes_emu::bus>();
+		auto bus = std::make_unique<noentiendo::bus>();
 		
 		//solder cpu
-		auto cpu = std::make_unique<nes_emu::cpu>(*bus);
+		auto cpu = std::make_unique<noentiendo::cpu>(*bus);
 		
 		//solder peripherals
 		//package nicely
@@ -30,7 +30,7 @@ public:
 		struct built_nes : nes
 		{
 			//https://seanmiddleditch.com/enabling-make-unique-with-private-constructors/
-			built_nes(std::unique_ptr<nes_emu::cpu> _cpu, std::unique_ptr<nes_emu::bus> _bus)
+			built_nes(std::unique_ptr<noentiendo::cpu> _cpu, std::unique_ptr<noentiendo::bus> _bus)
 				: nes{std::move(_cpu), std::move(_bus)}
 			{
 			}

@@ -1,7 +1,7 @@
 #pragma once
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_adc()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_adc()
 {
 	const auto page = std::invoke(Mode, *this);
 
@@ -24,8 +24,8 @@ void nes_emu::cpu::instruction_adc()
 		++cycles_remaining;
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_and()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_and()
 {
 	std::invoke(Mode, *this);
 	
@@ -37,8 +37,8 @@ void nes_emu::cpu::instruction_and()
 	set_flag(processor_status_register::negative, register_accumulator & 0x80);
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_asl()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_asl()
 {
 	const auto page = std::invoke(Mode, *this);
 	
@@ -50,7 +50,7 @@ void nes_emu::cpu::instruction_asl()
 	set_flag(processor_status_register::zero, (result & 0xFF) == 0x00);
 	set_flag(processor_status_register::negative, result & 0x80);
 
-	if (Mode == &nes_emu::cpu::address_mode_implicit)
+	if (Mode == &noentiendo::cpu::address_mode_implicit)
 		register_accumulator = result & 0x00FF;
 	else
 		write(address_absolute, result & 0x00FF);
@@ -59,8 +59,8 @@ void nes_emu::cpu::instruction_asl()
 		++cycles_remaining;
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode, nes_emu::processor_status_register flag, bool is_set>
-void nes_emu::cpu::branch()
+template <noentiendo::cpu::AddressingModeFunc Mode, noentiendo::processor_status_register flag, bool is_set>
+void noentiendo::cpu::branch()
 {
 	const auto page = std::invoke(Mode, *this);
 	
@@ -79,26 +79,26 @@ void nes_emu::cpu::branch()
 		++cycles_remaining;
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_bcc()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_bcc()
 {
 	branch<Mode, processor_status_register::carry, false>();
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_bcs()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_bcs()
 {
 	branch<Mode, processor_status_register::carry, true>();
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_beq()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_beq()
 {
 	branch<Mode, processor_status_register::zero, true>();
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_bit()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_bit()
 {
 	std::invoke(Mode, *this);
 	
@@ -111,29 +111,29 @@ void nes_emu::cpu::instruction_bit()
 	set_flag(processor_status_register::negative, fetched & 0x80);
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_bmi()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_bmi()
 {
 	std::invoke(Mode, *this);
 	branch<Mode, processor_status_register::negative, true>();
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_bne()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_bne()
 {
 	std::invoke(Mode, *this);
 	branch<Mode, processor_status_register::zero, false>();
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_bpl()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_bpl()
 {
 	std::invoke(Mode, *this);
 	branch<Mode, processor_status_register::negative, false>();
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_brk()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_brk()
 {
 	std::invoke(Mode, *this);
 	//program counter is incremented here as brk uses implicit addressing, which does not modify the program counter
@@ -165,50 +165,50 @@ void nes_emu::cpu::instruction_brk()
 	register_program_counter = static_cast<const std::uint16_t>(irq_hi_byte << 8) + irg_lo_byte;
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_bvc()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_bvc()
 {
 	std::invoke(Mode, *this);
 	branch<Mode, processor_status_register::overflow, false>();
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_bvs()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_bvs()
 {
 	std::invoke(Mode, *this);
 	branch<Mode, processor_status_register::overflow, true>();
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_clc()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_clc()
 {
 	std::invoke(Mode, *this);
 	set_flag(processor_status_register::carry, false);
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_cld()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_cld()
 {
 	std::invoke(Mode, *this);
 	set_flag(processor_status_register::decimal_mode, false);
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_cli()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_cli()
 {
 	std::invoke(Mode, *this);
 	set_flag(processor_status_register::interrupt_disable, false);
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_clv()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_clv()
 {
 	std::invoke(Mode, *this);
 	set_flag(processor_status_register::overflow, false);
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::compare(std::uint8_t& target_register)
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::compare(std::uint8_t& target_register)
 {
 	std::invoke(Mode, *this);
 	
@@ -221,26 +221,26 @@ void nes_emu::cpu::compare(std::uint8_t& target_register)
 	set_flag(processor_status_register::negative, result & 0x80);
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_cmp()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_cmp()
 {
 	compare<Mode>(register_accumulator);
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_cpx()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_cpx()
 {
 	compare<Mode>(register_x);
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_cpy()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_cpy()
 {
 	compare<Mode>(register_y);
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_dec()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_dec()
 {
 	std::invoke(Mode, *this);
 	
@@ -253,8 +253,8 @@ void nes_emu::cpu::instruction_dec()
 	set_flag(processor_status_register::negative, result & 0x80);
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_dex()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_dex()
 {
 	std::invoke(Mode, *this);
 	--register_x;
@@ -263,8 +263,8 @@ void nes_emu::cpu::instruction_dex()
 	set_flag(processor_status_register::negative, register_x & 0x80);
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_dey()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_dey()
 {
 	std::invoke(Mode, *this);
 	--register_y;
@@ -273,8 +273,8 @@ void nes_emu::cpu::instruction_dey()
 	set_flag(processor_status_register::negative, register_y & 0x80);
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_eor()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_eor()
 {
 	std::invoke(Mode, *this);
 	fetch<Mode>();
@@ -285,8 +285,8 @@ void nes_emu::cpu::instruction_eor()
 	set_flag(processor_status_register::negative, register_accumulator & 0x80);
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_inc()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_inc()
 {
 	std::invoke(Mode, *this);
 	fetch<Mode>();
@@ -298,8 +298,8 @@ void nes_emu::cpu::instruction_inc()
 	set_flag(processor_status_register::negative, result & 0x80);
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_inx()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_inx()
 {
 	std::invoke(Mode, *this);
 	++register_x;
@@ -308,8 +308,8 @@ void nes_emu::cpu::instruction_inx()
 	set_flag(processor_status_register::negative, register_x & 0x80);
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_iny()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_iny()
 {
 	std::invoke(Mode, *this);
 	++register_y;
@@ -318,15 +318,15 @@ void nes_emu::cpu::instruction_iny()
 	set_flag(processor_status_register::negative, register_y & 0x80);
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_jmp()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_jmp()
 {
 	std::invoke(Mode, *this);
 	register_program_counter = address_absolute;
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_jsr()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_jsr()
 {
 	std::invoke(Mode, *this);
 
@@ -340,8 +340,8 @@ void nes_emu::cpu::instruction_jsr()
 	register_program_counter = address_absolute;
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::load_register(std::uint8_t& target_register)
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::load_register(std::uint8_t& target_register)
 {
 	const auto page = std::invoke(Mode, *this);
 
@@ -356,26 +356,26 @@ void nes_emu::cpu::load_register(std::uint8_t& target_register)
 		++cycles_remaining;
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_lda()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_lda()
 {
 	load_register<Mode>(register_accumulator);
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_ldx()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_ldx()
 {
 	load_register<Mode>(register_x);
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_ldy()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_ldy()
 {
 	load_register<Mode>(register_y);
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_lsr()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_lsr()
 {
 	std::invoke(Mode, *this);
 	
@@ -394,14 +394,14 @@ void nes_emu::cpu::instruction_lsr()
 	set_flag(processor_status_register::negative, result & 0x80);
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_nop()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_nop()
 {
 	std::invoke(Mode, *this);
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_ora()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_ora()
 {
 	const auto page = std::invoke(Mode, *this);
 	fetch<Mode>();
@@ -415,8 +415,8 @@ void nes_emu::cpu::instruction_ora()
 		++cycles_remaining;
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_pha()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_pha()
 {
 	std::invoke(Mode, *this);
 	
@@ -424,8 +424,8 @@ void nes_emu::cpu::instruction_pha()
 	++register_stack_pointer;
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_php()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_php()
 {
 	std::invoke(Mode, *this);
 
@@ -433,8 +433,8 @@ void nes_emu::cpu::instruction_php()
 	++register_stack_pointer;	
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_pla()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_pla()
 {
 	std::invoke(Mode, *this);
 
@@ -445,8 +445,8 @@ void nes_emu::cpu::instruction_pla()
 	set_flag(processor_status_register::negative, register_accumulator & 0x80);
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_plp()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_plp()
 {
 	std::invoke(Mode, *this);
 
@@ -454,8 +454,8 @@ void nes_emu::cpu::instruction_plp()
 	--register_stack_pointer;
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_rol()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_rol()
 {
 	std::invoke(Mode, *this);
 
@@ -467,8 +467,8 @@ void nes_emu::cpu::instruction_rol()
 	set_flag(processor_status_register::negative, result & 0x80);
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_ror()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_ror()
 {
 	 std::invoke(Mode, *this);
 
@@ -480,8 +480,8 @@ void nes_emu::cpu::instruction_ror()
 	set_flag(processor_status_register::negative, result & 0x80);
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_rti()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_rti()
 {
 	std::invoke(Mode, *this);
 	
@@ -496,8 +496,8 @@ void nes_emu::cpu::instruction_rti()
 	register_program_counter = static_cast<const std::uint16_t>(hi_byte << 8) + static_cast<const std::uint16_t>(lo_byte);
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_rts()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_rts()
 {
 	std::invoke(Mode, *this);
 
@@ -509,8 +509,8 @@ void nes_emu::cpu::instruction_rts()
 	register_program_counter = static_cast<const std::uint16_t>(hi_byte << 8) + static_cast<const std::uint16_t>(lo_byte);
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_sbc()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_sbc()
 {
 	const auto page = std::invoke(Mode, *this);
 
@@ -534,47 +534,47 @@ void nes_emu::cpu::instruction_sbc()
 		++cycles_remaining;
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_sec()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_sec()
 {
 	set_flag(processor_status_register::carry, 1);
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_sed()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_sed()
 {
 	set_flag(processor_status_register::decimal_mode, 1);
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_sei()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_sei()
 {
 	set_flag(processor_status_register::interrupt_disable, 1);
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_sta()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_sta()
 {
 	std::invoke(Mode, *this);
 	write(address_absolute, register_accumulator);
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_stx()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_stx()
 {
 	std::invoke(Mode, *this);
 	write(address_absolute, register_x);
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_sty()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_sty()
 {
 	std::invoke(Mode, *this);
 	write(address_absolute, register_y);
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_tax()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_tax()
 {
 	std::invoke(Mode, *this);
 	
@@ -583,8 +583,8 @@ void nes_emu::cpu::instruction_tax()
 	set_flag(processor_status_register::negative, register_x & 0x80);
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_tay()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_tay()
 {
 	std::invoke(Mode, *this);
 
@@ -593,8 +593,8 @@ void nes_emu::cpu::instruction_tay()
 	set_flag(processor_status_register::negative, register_y & 0x80);
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_tsx()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_tsx()
 {
 	std::invoke(Mode, *this);
 
@@ -603,8 +603,8 @@ void nes_emu::cpu::instruction_tsx()
 	set_flag(processor_status_register::negative, register_x & 0x80);
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_txa()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_txa()
 {
 	std::invoke(Mode, *this);
 
@@ -613,8 +613,8 @@ void nes_emu::cpu::instruction_txa()
 	set_flag(processor_status_register::negative, register_accumulator & 0x80);
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_txs()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_txs()
 {
 	std::invoke(Mode, *this);
 
@@ -623,8 +623,8 @@ void nes_emu::cpu::instruction_txs()
 	set_flag(processor_status_register::negative, register_stack_pointer & 0x80);
 }
 
-template <nes_emu::cpu::AddressingModeFunc Mode>
-void nes_emu::cpu::instruction_tya()
+template <noentiendo::cpu::AddressingModeFunc Mode>
+void noentiendo::cpu::instruction_tya()
 {
 	std::invoke(Mode, *this);
 

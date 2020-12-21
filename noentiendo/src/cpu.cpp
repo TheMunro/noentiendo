@@ -4,10 +4,10 @@
 //INTERNAL
 #include "cpu.hpp"
 
-std::string opcode_to_string(nes_emu::opcode type)
+std::string opcode_to_string(noentiendo::opcode type)
 {
 #define STRINGIFY(x)             \
-    case nes_emu::opcode::x: \
+    case noentiendo::opcode::x: \
         return #x;
 
     switch (type)
@@ -66,9 +66,9 @@ std::string opcode_to_string(nes_emu::opcode type)
         STRINGIFY(TAY);
         STRINGIFY(TSX);
         STRINGIFY(TXA);
-        STRINGIFY(TXS);
-        STRINGIFY(TYA);
-        case nes_emu::opcode::None: 
+		STRINGIFY(TXS);
+		STRINGIFY(TYA);
+        case noentiendo::opcode::None: 
         default:
             return "XXX";
     }
@@ -77,23 +77,23 @@ std::string opcode_to_string(nes_emu::opcode type)
 }
 
 
-nes_emu::cpu::cpu(const nes_emu::bus& input_bus)
+noentiendo::cpu::cpu(const noentiendo::bus& input_bus)
 	: bus{input_bus}
 	, instructions{build_instructions()}
 {
 }
 
-std::uint8_t nes_emu::cpu::read(const std::uint16_t address, bool read_only) const
+std::uint8_t noentiendo::cpu::read(const std::uint16_t address, bool read_only) const
 {
 	return bus.read(address, read_only);
 }
 
-void nes_emu::cpu::write(const std::uint16_t address, const std::uint8_t data) const
+void noentiendo::cpu::write(const std::uint16_t address, const std::uint8_t data) const
 {
 	return bus.write(address, data);
 }
 
-void nes_emu::cpu::clock()
+void noentiendo::cpu::clock()
 {
   	if (cycles_remaining == 0)
 	{
@@ -110,7 +110,7 @@ void nes_emu::cpu::clock()
 	--cycles_remaining;
 }
 
-void nes_emu::cpu::reset()
+void noentiendo::cpu::reset()
 {
 	// Get address to set program counter to
 	address_absolute = 0xFFFC;
@@ -135,17 +135,20 @@ void nes_emu::cpu::reset()
 	cycles_remaining = 8;
 }
 
-void nes_emu::cpu::irq()
+void noentiendo::cpu::irq()
 {	
 }
 
-void nes_emu::cpu::nmi()
+void noentiendo::cpu::nmi()
 {
 }
 
-constexpr std::array<nes_emu::instruction, 256> nes_emu::cpu::build_instructions() const
+constexpr std::array<noentiendo::instruction, 256> noentiendo::cpu::build_instructions() const
 {
 	std::array<instruction, 256> instructions{};
+
+    for (auto i = 0; i < 256; ++i)
+		instructions[i] = instruction{opcode::XXX, 0, 0, addressing_mode ::IMPLICIT, &cpu::instruction_xxx};
 
 	//1 of 4
 	instructions[0x69] = instruction{opcode::ADC, 2, 2, addressing_mode::IMMEDIATE, &cpu::instruction_adc<&cpu::address_mode_immediate>};
@@ -361,7 +364,7 @@ constexpr std::array<nes_emu::instruction, 256> nes_emu::cpu::build_instructions
 	return instructions;
 }
 
-bool nes_emu::cpu::address_mode_implicit()
+bool noentiendo::cpu::address_mode_implicit()
 {
 	//In an implied instruction, the data and/or destination is mandatory for the instruction. For example,
 	//the CLC instruction is implied, it is going to clear the processor's Carry flag.
@@ -372,7 +375,7 @@ bool nes_emu::cpu::address_mode_implicit()
 	return false;
 }
 
-bool nes_emu::cpu::address_mode_accumulator()
+bool noentiendo::cpu::address_mode_accumulator()
 {
 	//These instructions have register A (the accumulator) as the target.
 	
@@ -384,7 +387,7 @@ bool nes_emu::cpu::address_mode_accumulator()
 	return false;
 }
 
-bool nes_emu::cpu::address_mode_immediate()
+bool noentiendo::cpu::address_mode_immediate()
 {
 	//These instructions have their data defined as the next byte after the opcode. ORA #$B2 will perform a
 	//logical (also called bitwise) of the value B2 with the accumulator.
@@ -397,7 +400,7 @@ bool nes_emu::cpu::address_mode_immediate()
 	return false;
 }
 
-bool nes_emu::cpu::address_mode_zero_page()
+bool noentiendo::cpu::address_mode_zero_page()
 {
 	//Zero-Page is an addressing mode that is only capable of addressing the first 256 bytes of the CPU's memory map.
 	//You can think of it as absolute addressing for the first 256 bytes. The instruction LDA $35 will put the value
@@ -413,7 +416,7 @@ bool nes_emu::cpu::address_mode_zero_page()
 	return false;
 }
 
-bool nes_emu::cpu::address_mode_zero_page_x()
+bool noentiendo::cpu::address_mode_zero_page_x()
 {
 	//This works just like absolute indexed, but the target address is limited to the first 0xFF bytes.
 	//The target address will wrap around and will always be in the zero page.If the instruction is LDA $C0, X,
@@ -428,7 +431,7 @@ bool nes_emu::cpu::address_mode_zero_page_x()
 	return false;
 }
 
-bool nes_emu::cpu::address_mode_zero_page_y()
+bool noentiendo::cpu::address_mode_zero_page_y()
 {
 	//This works just like absolute indexed, but the target address is limited to the first 0xFF bytes.
 	//The target address will wrap around and will always be in the zero page.If the instruction is LDA $C0, X,
@@ -443,7 +446,7 @@ bool nes_emu::cpu::address_mode_zero_page_y()
 	return false;
 }
 
-bool nes_emu::cpu::address_mode_relative()
+bool noentiendo::cpu::address_mode_relative()
 {
 	//Relative addressing on the 6502 is only used for branch operations. The byte after the opcode
 	//is the branch offset. If the branch is taken, the new address will the the current PC plus the offset.
@@ -458,7 +461,7 @@ bool nes_emu::cpu::address_mode_relative()
 	return false;
 }
 
-bool nes_emu::cpu::address_mode_absolute()
+bool noentiendo::cpu::address_mode_absolute()
 {
 	//Absolute addressing specifies the memory location explicitly in the two bytes following the
 	//opcode. So JMP $4032 will set the PC to $4032. The hex for this is 4C 32 40.
@@ -476,7 +479,7 @@ bool nes_emu::cpu::address_mode_absolute()
 	return false;
 }
 
-bool nes_emu::cpu::address_mode_absolute_x()
+bool noentiendo::cpu::address_mode_absolute_x()
 {
 	//This addressing mode makes the target address by adding the contents of the X or Y
 	//register to an absolute address. For example, this 6502 code can be used to fill 10 bytes
@@ -492,7 +495,7 @@ bool nes_emu::cpu::address_mode_absolute_x()
 	return ret & false;
 }
 
-bool nes_emu::cpu::address_mode_absolute_y()
+bool noentiendo::cpu::address_mode_absolute_y()
 {
 	//This addressing mode makes the target address by adding the contents of the X or Y
 	//register to an absolute address. For example, this 6502 code can be used to fill 10 bytes
@@ -508,7 +511,7 @@ bool nes_emu::cpu::address_mode_absolute_y()
 	return ret & false;
 }
 
-bool nes_emu::cpu::address_mode_indirect()
+bool noentiendo::cpu::address_mode_indirect()
 {
 	//The JMP instruction is the only instruction that uses this addressing mode.
 	//It is a 3 byte instruction - the 2nd and 3rd bytes are an absolute address.
@@ -525,7 +528,7 @@ bool nes_emu::cpu::address_mode_indirect()
 	return false;
 }
 
-bool nes_emu::cpu::address_mode_indexed_indirect()
+bool noentiendo::cpu::address_mode_indexed_indirect()
 {
 	//This mode is only used with the X register. Consider a situation where the instruction is LDA ($20,X),
 	//X contains $04, and memory at $24 contains 0024: 74 20, First, X is added to $20 to get $24.
@@ -551,7 +554,7 @@ bool nes_emu::cpu::address_mode_indexed_indirect()
 	return false;
 }
 
-bool nes_emu::cpu::address_mode_indirect_indexed()
+bool noentiendo::cpu::address_mode_indirect_indexed()
 {
 	//This mode is only used with the Y register. It differs in the order that Y is applied to the indirectly
 	//fetched address. An example instruction that uses indirect index addressing is LDA ($86),Y .
@@ -583,7 +586,7 @@ bool nes_emu::cpu::address_mode_indirect_indexed()
 	
 	return false;
 }
-std::vector<std::string> nes_emu::cpu::get_current_execution_window() const
+std::vector<std::string> noentiendo::cpu::get_current_execution_window() const
 {
 	std::vector<std::string> result;
 	result.reserve(21);
@@ -593,7 +596,7 @@ std::vector<std::string> nes_emu::cpu::get_current_execution_window() const
 	const auto initial = register_program_counter;
 
 	auto current = initial;
-	auto prev_count = 5;
+	auto prev_count = 10;
 	while (prev_count > 0)
 	{
 		auto previous = current;
@@ -609,7 +612,7 @@ std::vector<std::string> nes_emu::cpu::get_current_execution_window() const
 	
 	result.emplace_back(instruction_to_string(initial, current));
 
-	auto next_count = 5;
+	auto next_count = 10;
 	while (next_count > 0)
 	{
 		auto next = current;
@@ -629,7 +632,7 @@ std::vector<std::string> nes_emu::cpu::get_current_execution_window() const
 }
 
 //Adapted from https://github.com/OneLoneCoder/olcNES/blob/1db7fcad56591d22de36300b53da603a7c996125/Part%232%20-%20CPU/olc6502.cpp#L1472
-std::string nes_emu::cpu::instruction_to_string(uint16_t current, uint16_t& next) const 
+std::string noentiendo::cpu::instruction_to_string(uint16_t current, uint16_t& next) const 
 {
 	next = current;
 	uint8_t value = 0x00;
@@ -648,52 +651,52 @@ std::string nes_emu::cpu::instruction_to_string(uint16_t current, uint16_t& next
 
 	if (instructions[current_opcode].addressing_mode == addressing_mode::IMPLICIT)
 	{
-		instruction += " {IMP}";
+		instruction += "{IMP}";
 	}
 	else if(instructions[current_opcode].addressing_mode == addressing_mode::ACCUMULATOR)
 	{
-		instruction += " {ACC}";
+		instruction += "{ACC}";
 	}
 	else if (instructions[current_opcode].addressing_mode == addressing_mode::IMMEDIATE)
 	{
 		value = bus.read(next, true);
 		next++;
-		instruction += "#$" + hex(value, 2) + " {IMM}";
+		instruction += "{IMM} #$" + hex(value, 2) ;
 	}
 	else if (instructions[current_opcode].addressing_mode == addressing_mode::ZERO_PAGE)
 	{
 		lo = bus.read(next, true);
 		next++;
 		hi = 0x00;
-		instruction += "$" + hex(lo, 2) + " {ZP0}";
+		instruction += "{ZP0} $" + hex(lo, 2);
 	}
 	else if (instructions[current_opcode].addressing_mode == addressing_mode::ZERO_PAGE_X)
 	{
 		lo = bus.read(next, true);
 		next++;
 		hi = 0x00;
-		instruction += "$" + hex(lo, 2) + ", X {ZPX}";
+		instruction += "{ZPX} $" + hex(lo, 2) + ", X";
 	}
 	else if (instructions[current_opcode].addressing_mode == addressing_mode::ZERO_PAGE_Y)
 	{
 		lo = bus.read(next, true);
 		next++;
 		hi = 0x00;
-		instruction += "$" + hex(lo, 2) + ", Y {ZPY}";
+		instruction += "{ZPY} $" + hex(lo, 2) + ", Y";
 	}
 	else if (instructions[current_opcode].addressing_mode == addressing_mode::INDEXED_INDIRECT)
 	{
 		lo = bus.read(next, true);
 		next++;
 		hi = 0x00;
-		instruction += "($" + hex(lo, 2) + ", X) {IZX}";
+		instruction += "{IZX} ($" + hex(lo, 2) + ", X)";
 	}
 	else if (instructions[current_opcode].addressing_mode == addressing_mode::INDIRECT_INDEXED)
 	{
 		lo = bus.read(next, true);
 		next++;
 		hi = 0x00;
-		instruction += "($" + hex(lo, 2) + "), Y {IZY}";
+		instruction += "{IZY} ($" + hex(lo, 2) + "), Y";
 	}
 	else if (instructions[current_opcode].addressing_mode == addressing_mode::ABSOLUTE)
 	{
@@ -701,7 +704,7 @@ std::string nes_emu::cpu::instruction_to_string(uint16_t current, uint16_t& next
 		next++;
 		hi = bus.read(next, true);
 		next++;
-		instruction += "$" + hex(static_cast<uint16_t>(hi << 8) + lo, 4) + " {ABS}";
+		instruction += "{ABS} $" + hex(static_cast<uint16_t>(hi << 8) + lo, 4);
 	}
 	else if (instructions[current_opcode].addressing_mode == addressing_mode::ABSOLUTE_X)
 	{
@@ -709,7 +712,7 @@ std::string nes_emu::cpu::instruction_to_string(uint16_t current, uint16_t& next
 		next++;
 		hi = bus.read(next, true);
 		next++;
-		instruction += "$" + hex(static_cast<uint16_t>(hi << 8) + lo, 4) + ", X {ABX}";
+		instruction += "{ABX} $" + hex(static_cast<uint16_t>(hi << 8) + lo, 4) + ", X";
 	}
 	else if (instructions[current_opcode].addressing_mode == addressing_mode::ABSOLUTE_Y)
 	{
@@ -717,7 +720,7 @@ std::string nes_emu::cpu::instruction_to_string(uint16_t current, uint16_t& next
 		next++;
 		hi = bus.read(next, true);
 		next++;
-		instruction += "$" + hex(static_cast<uint16_t>(hi << 8) + lo, 4) + ", Y {ABY}";
+		instruction += "{ABY} $" + hex(static_cast<uint16_t>(hi << 8) + lo, 4) + ", Y";
 	}
 	else if (instructions[current_opcode].addressing_mode == addressing_mode::INDIRECT)
 	{
@@ -725,19 +728,19 @@ std::string nes_emu::cpu::instruction_to_string(uint16_t current, uint16_t& next
 		next++;
 		hi = bus.read(next, true);
 		next++;
-		instruction += "($" + hex(static_cast<uint16_t>(hi << 8) + lo, 4) + ") {IND}";
+		instruction += "{IND} ($" + hex(static_cast<uint16_t>(hi << 8) + lo, 4) + ")";
 	}
 	else if (instructions[current_opcode].addressing_mode == addressing_mode::RELATIVE)
 	{
 		value = bus.read(next, true);
 		next++;
-		instruction += "$" + hex(value, 2) + " [$" + hex(next + value, 4) + "] {REL}";
+		instruction += "{REL} $" + hex(value, 2) + " [$" + hex(next + value, 4) + "]";
 	}
 
 	return instruction;
 }
 
-bool nes_emu::cpu::find_previous_instruction(uint16_t current, uint16_t& previous) const
+bool noentiendo::cpu::find_previous_instruction(uint16_t current, uint16_t& previous) const
 {
 	auto check_instruction = [&current, &previous, *this](auto distance) {
 
@@ -749,7 +752,7 @@ bool nes_emu::cpu::find_previous_instruction(uint16_t current, uint16_t& previou
 		--current;
 		
 		const auto opcode = bus.read(current, true);
-		if (instructions[opcode].bytes == distance)
+		if (instructions[opcode].bytes == distance || static_cast<noentiendo::opcode>(opcode) == opcode::XXX)
 		{
 			previous = current;
 			return true;
@@ -758,12 +761,10 @@ bool nes_emu::cpu::find_previous_instruction(uint16_t current, uint16_t& previou
 		return false;
 	};
 	
-	 return check_instruction(1)
-		|| check_instruction(2)
-		|| check_instruction(3);
+	 return check_instruction(1) || check_instruction(2) || check_instruction(3);
 }
 
-bool nes_emu::cpu::find_next_instruction(uint16_t current, uint16_t& next) const
+bool noentiendo::cpu::find_next_instruction(uint16_t current, uint16_t& next) const
 {
 	auto check_instruction = [&current, &next, *this](auto distance) {
 		if (current == 0x0000 || current == 0xFFFF)
@@ -774,7 +775,7 @@ bool nes_emu::cpu::find_next_instruction(uint16_t current, uint16_t& next) const
 		++current;
 		
 		const auto opcode = bus.read(current, true);
-		if (instructions[opcode].bytes == distance)
+		if (instructions[opcode].bytes == distance || static_cast<noentiendo::opcode>(opcode) == opcode::XXX)
 		{
 			next = current;
 			return true;

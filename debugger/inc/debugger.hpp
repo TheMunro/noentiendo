@@ -24,7 +24,7 @@ private:
 	void render();
 
 private:
-	std::unique_ptr<nes_emu::nes> nes;
+	std::unique_ptr<noentiendo::nes> nes;
 	
 	window window;
 	input input;

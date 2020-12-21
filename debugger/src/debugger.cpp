@@ -17,7 +17,7 @@
 
 
 debugger::debugger::debugger(std::string name)
-	: nes{nes_emu::nes::build()}
+	: nes{noentiendo::nes::build()}
 	, window{std::move(name)}
 	, input{window}
 	, renderer{window}
@@ -36,7 +36,7 @@ void debugger::debugger::run()
 	renderer.render(clear_color);
 }
 
-std::string get_register_status(nes_emu::bitfield<nes_emu::processor_status_register> status)
+std::string get_register_status(noentiendo::bitfield<noentiendo::processor_status_register> status)
 {
 
 
@@ -80,21 +80,21 @@ void debugger::debugger::render()
 	    ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
 		auto flags = static_cast<int>(nes->get_cpu()->get_register_status().value());
 
-		ImGui::CheckboxFlags("N", &flags, static_cast<int>(nes_emu::processor_status_register::negative));
+		ImGui::CheckboxFlags("N", &flags, static_cast<int>(noentiendo::processor_status_register::negative));
 		ImGui::SameLine();
-		ImGui::CheckboxFlags("V", &flags, static_cast<int>(nes_emu::processor_status_register::overflow));
+		ImGui::CheckboxFlags("V", &flags, static_cast<int>(noentiendo::processor_status_register::overflow));
 		ImGui::SameLine();
-		ImGui::CheckboxFlags("U", &flags, static_cast<int>(nes_emu::processor_status_register::unused));
+		ImGui::CheckboxFlags("U", &flags, static_cast<int>(noentiendo::processor_status_register::unused));
 		ImGui::SameLine();
-		ImGui::CheckboxFlags("B", &flags, static_cast<int>(nes_emu::processor_status_register::break_command));
+		ImGui::CheckboxFlags("B", &flags, static_cast<int>(noentiendo::processor_status_register::break_command));
 		
-		ImGui::CheckboxFlags("D", &flags, static_cast<int>(nes_emu::processor_status_register::decimal_mode));
+		ImGui::CheckboxFlags("D", &flags, static_cast<int>(noentiendo::processor_status_register::decimal_mode));
 		ImGui::SameLine();
-		ImGui::CheckboxFlags("I", &flags, static_cast<int>(nes_emu::processor_status_register::interrupt_disable));
+		ImGui::CheckboxFlags("I", &flags, static_cast<int>(noentiendo::processor_status_register::interrupt_disable));
 		ImGui::SameLine();
-		ImGui::CheckboxFlags("Z", &flags, static_cast<int>(nes_emu::processor_status_register::zero));
+		ImGui::CheckboxFlags("Z", &flags, static_cast<int>(noentiendo::processor_status_register::zero));
 		ImGui::SameLine();
-		ImGui::CheckboxFlags("C", &flags, static_cast<int>(nes_emu::processor_status_register::carry));
+		ImGui::CheckboxFlags("C", &flags, static_cast<int>(noentiendo::processor_status_register::carry));
 
 		ImGui::PushStyleColor(ImGuiCol_CheckMark, (ImVec4)ImColor::HSV(0.0f, 0.6f, 0.6f));
 		ImGui::PopStyleColor(1);
