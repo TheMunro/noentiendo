@@ -13,15 +13,15 @@ namespace noentiendo
 {
 enum class processor_status_register : std::uint8_t
 {
-	none            = 0,
-	carry           = 1 << 0, //C
-	zero            = 1 << 1, //Z
-	interrupt_disable     = 1 << 2, //I
-	decimal_mode    = 1 << 3, //D
-	break_command   = 1 << 4, //B
-	unused          = 1 << 5,
-	overflow        = 1 << 6, //V
-	negative        = 1 << 7  //N
+	none              = 0,
+	carry             = 1 << 0, //C
+	zero              = 1 << 1, //Z
+	interrupt_disable = 1 << 2, //I
+	decimal_mode      = 1 << 3, //D
+	break_command     = 1 << 4, //B
+	unused            = 1 << 5,
+	overflow          = 1 << 6, //V
+	negative          = 1 << 7  //N
 };
 
 
@@ -177,13 +177,13 @@ private:
 	void set_flag(const processor_status_register flag, const std::uint8_t value)
 	{
 		if (value)
-			register_status &= flag;
+			register_status |= flag;
 	}
 
 	void clear_flag(const processor_status_register flag, const std::uint8_t value)
 	{
 		if (value)
-			register_status |= flag;
+			register_status &= ~static_cast<uint8_t>(flag);
 	}
 
 private:

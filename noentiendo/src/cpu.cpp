@@ -23,6 +23,8 @@ void noentiendo::cpu::write(const std::uint16_t address, const std::uint8_t data
 
 void noentiendo::cpu::clock()
 {
+	//get the next opcode on each cycle, just so that we know what it is, even though
+	//we're not executing it until the previous operation has completed
 	opcode = read(register_program_counter);
   	if (cycles_remaining == 0)
 	{
@@ -382,10 +384,10 @@ bool noentiendo::cpu::address_mode_relative()
 
 	address_relative = read(register_program_counter);
 	++register_program_counter;
-	
-	//TODO: there is a weird bit in https://github.com/OneLoneCoder/olcNES/blob/master/Part%232%20-%20CPU/olc6502.cpp
-	//TODO: for this that it setting some upper byte that is then only being used to check for overflow,
-	//TODO: can this be handled more cleanly elsewhere?
+
+	if (address_relative & 0x80)
+		address_relative |= 0xFF00;
+
 	return false;
 }
 
@@ -402,7 +404,7 @@ bool noentiendo::cpu::address_mode_absolute()
 	const std::uint16_t hi_byte = read(register_program_counter);
 	++register_program_counter;
 
-	address_absolute = static_cast<std::uint16_t>(hi_byte << 8) + lo_byte;
+	address_absolute = static_cast<std::uint16_t>(hi_byte << 8) | lo_byte;
 	
 	return false;
 }
@@ -417,10 +419,10 @@ bool noentiendo::cpu::address_mode_absolute_x()
 
 	const auto hi_byte = address_absolute & 0xFF00;
 	address_absolute += register_x;
-	if ((hi_byte & (address_absolute & 0xFF00)) == 0xFF00)
+	if ((address_absolute & 0xFF00) != hi_byte)
 		return true; //new page, use result to increase cycle count
 
-	return ret & false;
+	return ret;
 }
 
 bool noentiendo::cpu::address_mode_absolute_y()
@@ -433,10 +435,10 @@ bool noentiendo::cpu::address_mode_absolute_y()
 
 	const auto hi_byte = address_absolute & 0xFF00;
 	address_absolute += register_y;
-	if ((hi_byte & (address_absolute & 0xFF00)) == 0xFF00)
+	if ((address_absolute & 0xFF00) != hi_byte)
 		return true; //new page, use result to increase cycle count
 
-	return ret & false;
+	return ret;
 }
 
 bool noentiendo::cpu::address_mode_indirect()
@@ -445,13 +447,28 @@ bool noentiendo::cpu::address_mode_indirect()
 	//It is a 3 byte instruction - the 2nd and 3rd bytes are an absolute address.
 	//The set the PC to the address stored at that address. So maybe this would be clearer.
 
-	const std::uint16_t lo_byte = read(register_program_counter);
+	const std::uint16_t ptr_lo_byte = read(register_program_counter);
 	++register_program_counter;
 
-	const std::uint16_t hi_byte = read(register_program_counter);
+	const std::uint16_t ptr_hi_byte = read(register_program_counter);
 	++register_program_counter;
 
-	address_absolute = static_cast<std::uint16_t>(hi_byte << 8) + lo_byte;
+	const auto ptr = static_cast<std::uint16_t>(ptr_hi_byte << 8) | ptr_lo_byte;
+
+	if (ptr_lo_byte == 0xFF)
+	{
+		const std::uint16_t lo_byte = read(ptr);
+		const std::uint16_t hi_byte = read(ptr & 0xFF00);
+
+		address_absolute = static_cast<std::uint16_t>(hi_byte << 8) | lo_byte;
+	}
+	else
+	{
+		const std::uint16_t lo_byte = read(ptr);
+		const std::uint16_t hi_byte = read(ptr + 1);
+
+		address_absolute = static_cast<std::uint16_t>(hi_byte << 8) | lo_byte;
+	}
 	
 	return false;
 }
@@ -474,10 +491,10 @@ bool noentiendo::cpu::address_mode_indexed_indirect()
 
 	ptr += register_x;
 
-	const std::uint16_t hi_byte = read(ptr) << 8;
+	const std::uint16_t hi_byte = read(ptr);
 	const std::uint16_t lo_byte = read(ptr + 1);
 
-	address_absolute = static_cast<std::uint16_t>(hi_byte << 8) + lo_byte;
+	address_absolute = static_cast<std::uint16_t>(hi_byte << 8) | lo_byte;
 	
 	return false;
 }
@@ -501,10 +518,10 @@ bool noentiendo::cpu::address_mode_indirect_indexed()
 	const auto ptr = read(register_program_counter);
 	++register_program_counter;
 
-	const std::uint16_t hi_byte = read(ptr) << 8;
-	const std::uint16_t lo_byte = read(ptr + 1);
+	const std::uint16_t hi_byte = read(ptr);
+	const std::uint16_t lo_byte = read((ptr + 1) & 0x00FF);
 
-	address_absolute = static_cast<std::uint16_t>(hi_byte << 8) + lo_byte;
+	address_absolute = static_cast<std::uint16_t>(hi_byte << 8) | lo_byte;
 	
 	address_absolute += register_y;
 
