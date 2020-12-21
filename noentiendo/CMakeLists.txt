@@ -1,6 +1,7 @@
 ﻿cmake_minimum_required (VERSION 3.16)
 
 set(noentiendo_INCLUDES
+    "inc/util.hpp"
 	"inc/bitfield.hpp"
 	"inc/nes.hpp"
 	"inc/cpu.hpp"

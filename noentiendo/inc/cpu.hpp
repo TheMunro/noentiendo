@@ -115,10 +115,11 @@ public:
 	[[nodiscard]] std::uint8_t get_cycles_remaining() const { return cycles_remaining; }
 	[[nodiscard]] std::uint32_t get_clock_count() const { return clock_count; }
 
+	[[nodiscard]] const instruction& get_instruction() const { return instructions[opcode]; }
 	[[nodiscard]] std::vector<std::string> disassemble() const;
 
 private:
-	[[nodiscard]] std::string instruction_to_string(const uint16_t current, uint16_t& next) const;
+	[[nodiscard]] std::string instruction_to_string(uint16_t current, uint16_t& next) const;
 	[[nodiscard]] bool find_previous_instruction(const uint16_t current, uint16_t& previous) const;
 	[[nodiscard]] bool find_next_instruction(const uint16_t current, uint16_t& next) const;
 
@@ -213,7 +214,7 @@ private:
 template <noentiendo::cpu::AddressingModeFunc Mode>
 void noentiendo::cpu::fetch()
 {
-	if (Mode != &noentiendo::cpu::address_mode_implicit)
+	if constexpr (Mode != &noentiendo::cpu::address_mode_implicit)
 		fetched = read(address_absolute);
 }
 

@@ -11,9 +11,8 @@
 
 #include <imgui_internal.h>
 
-
-#include "cartridge.hpp"
 #include "memory_editor.hpp"
+#include "util.hpp"
 
 
 debugger::debugger::debugger(std::string name)
@@ -75,8 +74,6 @@ void debugger::debugger::render()
 			nes->get_cpu()->reset();
 		}
 
-		//auto red = static_cast<ImVec4>(ImColor::HSV(0.0f, 0.6f, 0.6f));
-		//auto green = static_cast<ImVec4>(ImColor::HSV(0.2f, 0.6f, 0.6f));
 	    ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
 		auto flags = static_cast<int>(nes->get_cpu()->get_register_status().value());
 
@@ -100,13 +97,16 @@ void debugger::debugger::render()
 		ImGui::PopStyleColor(1);
 		ImGui::PopItemFlag();
 
-		
+		uint16_t ignore = 0;
+		const auto opcode = fmt::format("OP: {}", opcode_to_string(nes->get_cpu()->get_instruction().opcode));
 		const auto program_counter = fmt::format("PC: {:04X}", nes->get_cpu()->get_register_program_counter());
 		const auto stack_pointer = fmt::format("SP: {:02X}", nes->get_cpu()->get_register_stack_pointer());
 		const auto accumulator = fmt::format("A:  {:02X}", nes->get_cpu()->get_register_accumulator());
 		const auto register_x = fmt::format("X:  {:02X}", nes->get_cpu()->get_register_x());
 		const auto register_y = fmt::format("Y:  {:02X}", nes->get_cpu()->get_register_y());
+		
 
+		ImGui::Text(opcode.c_str());
 		ImGui::Text(program_counter.c_str());
 		ImGui::Text(stack_pointer.c_str());
 		ImGui::Text(accumulator.c_str());
@@ -120,8 +120,16 @@ void debugger::debugger::render()
 			if (nes->is_active())
 			{
 				auto disassembly = nes->disassemble();
+
+				auto i = 0;
 				for (const auto& item : disassembly)
-					ImGui::Text(item.c_str());
+				{
+					if (i == 10)
+						ImGui::TextColored(ImVec4(0.3f, 0.8f, 0.3f, 1.0f), item.c_str());
+					else
+						ImGui::Text(item.c_str());
+					++i;
+				}
 			}
 
 			ImGui::End();
