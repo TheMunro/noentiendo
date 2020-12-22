@@ -4,11 +4,13 @@ template <noentiendo::cpu::AddressingModeFunc Mode>
 void noentiendo::cpu::instruction_adc()
 {
 	const auto page = std::invoke(Mode, *this);
+	if (page)
+		++cycles_remaining;
 
 	fetch<Mode>();
-	const std::uint16_t result = static_cast<const std::uint16_t>(register_accumulator)
+  	const std::uint16_t result = static_cast<const std::uint16_t>(register_accumulator)
                                + static_cast<const std::uint16_t>(fetched)
-                               + (get_flag(processor_status_register::carry) << 7);
+                               + static_cast<const std::uint16_t>(get_flag(processor_status_register::carry));
 
 	const std::uint16_t overflow = ~(static_cast<const std::uint16_t>(register_accumulator) ^ static_cast<const std::uint16_t>(fetched))
 					             & (static_cast<const std::uint16_t>(register_accumulator) ^ static_cast<const std::uint16_t>(result));
@@ -19,9 +21,6 @@ void noentiendo::cpu::instruction_adc()
 	set_flag(processor_status_register::negative, result & 0x80);
 	
 	register_accumulator = result & 0x00FF;
-	
-	if (page)
-		++cycles_remaining;
 }
 
 template <noentiendo::cpu::AddressingModeFunc Mode>
@@ -41,6 +40,8 @@ template <noentiendo::cpu::AddressingModeFunc Mode>
 void noentiendo::cpu::instruction_asl()
 {
 	const auto page = std::invoke(Mode, *this);
+	if (page)
+		++cycles_remaining;
 	
 	fetch<Mode>();
 
@@ -54,29 +55,25 @@ void noentiendo::cpu::instruction_asl()
 		register_accumulator = result & 0x00FF;
 	else
 		write(address_absolute, result & 0x00FF);
-	
-	if (page)
-		++cycles_remaining;
 }
 
 template <noentiendo::cpu::AddressingModeFunc Mode, noentiendo::processor_status_register flag, bool is_set>
 void noentiendo::cpu::branch()
 {
-	const auto page = std::invoke(Mode, *this);
-	
-	if (get_flag(flag) == is_set)
-	{
-		++cycles_remaining;
-		address_absolute = register_program_counter + address_relative;
-
-		if ((address_absolute & 0xFF00) != (register_program_counter & 0xFF00))
-			++cycles_remaining;
-
-		register_program_counter = address_absolute;
-	}
-	
+    const auto page = std::invoke(Mode, *this);
 	if (page)
 		++cycles_remaining;
+	
+	if (get_flag(flag) != is_set)
+		return;
+		
+	++cycles_remaining;
+	address_absolute = register_program_counter + address_relative;
+
+	if ((address_absolute & 0xFF00) != (register_program_counter & 0xFF00))
+		++cycles_remaining;
+
+	register_program_counter = address_absolute;	
 }
 
 template <noentiendo::cpu::AddressingModeFunc Mode>
@@ -114,21 +111,18 @@ void noentiendo::cpu::instruction_bit()
 template <noentiendo::cpu::AddressingModeFunc Mode>
 void noentiendo::cpu::instruction_bmi()
 {
-	std::invoke(Mode, *this);
 	branch<Mode, processor_status_register::negative, true>();
 }
 
 template <noentiendo::cpu::AddressingModeFunc Mode>
 void noentiendo::cpu::instruction_bne()
 {
-	std::invoke(Mode, *this);
 	branch<Mode, processor_status_register::zero, false>();
 }
 
 template <noentiendo::cpu::AddressingModeFunc Mode>
 void noentiendo::cpu::instruction_bpl()
 {
-	std::invoke(Mode, *this);
 	branch<Mode, processor_status_register::negative, false>();
 }
 
@@ -168,14 +162,12 @@ void noentiendo::cpu::instruction_brk()
 template <noentiendo::cpu::AddressingModeFunc Mode>
 void noentiendo::cpu::instruction_bvc()
 {
-	std::invoke(Mode, *this);
 	branch<Mode, processor_status_register::overflow, false>();
 }
 
 template <noentiendo::cpu::AddressingModeFunc Mode>
 void noentiendo::cpu::instruction_bvs()
 {
-	std::invoke(Mode, *this);
 	branch<Mode, processor_status_register::overflow, true>();
 }
 
@@ -344,16 +336,15 @@ template <noentiendo::cpu::AddressingModeFunc Mode>
 void noentiendo::cpu::load_register(std::uint8_t& target_register)
 {
 	const auto page = std::invoke(Mode, *this);
-
+	if (page)
+		++cycles_remaining;
+	
 	fetch<Mode>();
 
 	target_register = fetched;
 
 	set_flag(processor_status_register::zero, target_register == 0x00);
 	set_flag(processor_status_register::negative, target_register & 0x80);
-
-	if (page)
-		++cycles_remaining;
 }
 
 template <noentiendo::cpu::AddressingModeFunc Mode>
@@ -404,15 +395,15 @@ template <noentiendo::cpu::AddressingModeFunc Mode>
 void noentiendo::cpu::instruction_ora()
 {
 	const auto page = std::invoke(Mode, *this);
+	if (page)
+		++cycles_remaining;
+	
 	fetch<Mode>();
 
 	register_accumulator |= fetched;
 
 	set_flag(processor_status_register::zero, register_accumulator == 0x00);
 	set_flag(processor_status_register::negative, register_accumulator & 0x80);
-
-	if (page)
-		++cycles_remaining;
 }
 
 template <noentiendo::cpu::AddressingModeFunc Mode>
@@ -513,6 +504,8 @@ template <noentiendo::cpu::AddressingModeFunc Mode>
 void noentiendo::cpu::instruction_sbc()
 {
 	const auto page = std::invoke(Mode, *this);
+	if (page)
+		++cycles_remaining;
 
 	fetch<Mode>();
 	
@@ -529,9 +522,6 @@ void noentiendo::cpu::instruction_sbc()
 	set_flag(processor_status_register::negative, result & 0x80);
 
 	register_accumulator = result & 0x00FF;
-	
-	if (page)
-		++cycles_remaining;
 }
 
 template <noentiendo::cpu::AddressingModeFunc Mode>

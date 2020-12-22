@@ -178,13 +178,15 @@ private:
 	{
 		if (value)
 			register_status |= flag;
-	}
-
-	void clear_flag(const processor_status_register flag, const std::uint8_t value)
-	{
-		if (value)
+		else
 			register_status &= ~static_cast<uint8_t>(flag);
 	}
+
+	//void clear_flag(const processor_status_register flag, const std::uint8_t value)
+	//{
+	//	if (value)
+	//		register_status &= ~static_cast<uint8_t>(flag);
+	//}
 
 private:
 	[[nodiscard]] constexpr std::array<instruction, 256> build_instructions() const;

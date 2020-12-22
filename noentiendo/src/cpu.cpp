@@ -42,35 +42,37 @@ void noentiendo::cpu::clock()
 
 void noentiendo::cpu::reset()
 {
-	// Get address to set program counter to
-	address_absolute = 0xFFFC;
-	const uint16_t lo_byte = read(address_absolute + 0);
-	const uint16_t hi_byte = read(address_absolute + 1);
-
-	// Set it
-	register_program_counter = (hi_byte << 8) + lo_byte;
-
 	// Reset internal registers
 	register_accumulator = 0;
 	register_x = 0;
 	register_y = 0;
 	register_stack_pointer = 0xFD;
-	register_status = 0x00;
+	register_status = 0x00;//register_status = 0x00 | static_cast<uint8_t>(processor_status_register::unused);
 
+	//get program counter from reset vector
+	address_absolute = 0xFFFC;
+	const uint16_t lo_byte = read(address_absolute + 0);
+	const uint16_t hi_byte = read(address_absolute + 1);
+
+	register_program_counter = (hi_byte << 8) + lo_byte;
+
+	//clear more data
 	address_relative = 0x0000;
 	address_absolute = 0x0000;
 	fetched = 0x00;
 
-	// Reset takes time
+	// reset takes time
 	cycles_remaining = 8;
 }
 
 void noentiendo::cpu::irq()
-{	
+{
+	//TODO: Write to stack and perform interrupt, required if RTI is used as that unwinds this operation
 }
 
 void noentiendo::cpu::nmi()
 {
+	//TODO: Write to stack and perform interrupt, but non-interruptably, required if RTI is used as that unwinds this operation
 }
 
 constexpr std::array<noentiendo::instruction, 256> noentiendo::cpu::build_instructions() const
